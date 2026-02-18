@@ -20,7 +20,7 @@
 
 ## 3. Функционалност
 
-- **Email нотификации** — имейл при ново запитване/контакт
+- ~~**Email нотификации** — имейл при ново запитване/контакт~~ ✅ Resend интеграция
 - **PDF каталог** — генериране на PDF с продуктови спецификации
 - **Споделяне в социални мрежи** — бутони за споделяне
 - **Google Maps интеграция** — реална карта в контактната страница
@@ -38,7 +38,7 @@
 
 ## 5. Производителност
 
-- **Image optimization** — Next.js `<Image>` с WebP, lazy loading, responsive sizes
+- ~~**Image optimization** — Next.js `<Image>` с WebP, lazy loading, responsive sizes~~ ✅ Имплементирано
 - **Database** — миграция от SQLite към PostgreSQL
 - **Caching** — HTTP cache headers, ISR за product pages
 - **CDN** — Cloudflare за статични ресурси
@@ -46,7 +46,7 @@
 
 ## 6. Сигурност
 
-- **Rate limiting** — защита на API routes
+- ~~**Rate limiting** — защита на API routes~~ ✅ In-memory sliding window (5 req/15min)
 - **CSRF protection** — допълнителна защита на формите
 - **Input sanitization** — по-стриктна валидация
 - **Content Security Policy** — CSP headers
@@ -66,7 +66,7 @@
 
 | Фаза | Задачи | Приоритет |
 |------|--------|-----------|
-| **Фаза 1** | Image optimization, PostgreSQL, Email нотификации, Rate limiting | Висок |
+| **Фаза 1** | ~~Image optimization~~, PostgreSQL, ~~Email нотификации~~, ~~Rate limiting~~ | ✅ Частично |
 | **Фаза 2** | Търсене, сортиране, пагинация, SEO (JSON-LD, OG tags, robots.txt) | Висок |
 | **Фаза 3** | Inquiry статус, Export данни, Loading states, CI/CD | Среден |
 | **Фаза 4** | Blog, i18n, Cookie consent, Тестове | Среден |

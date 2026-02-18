@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getContentMap } from "@/lib/content";
 
 export default async function Hero() {
@@ -6,14 +7,15 @@ export default async function Hero() {
 
   return (
     <section className="relative bg-[var(--color-primary-dark)] text-white">
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30" />
-      <div
-        className="relative min-h-[500px] lg:min-h-[600px] flex items-center bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url('/images/hero-bg.jpg')",
-        }}
-      >
+      <div className="relative min-h-[500px] lg:min-h-[600px] flex items-center">
+        <Image
+          src="/images/hero-bg.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight max-w-2xl">

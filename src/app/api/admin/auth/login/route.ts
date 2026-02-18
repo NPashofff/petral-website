@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/auth";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rateLimitResponse = checkRateLimit(ip, "login", {
+    maxRequests: 5,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const { username, password } = await request.json();
 

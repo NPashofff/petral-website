@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 
 interface ImageGalleryProps {
   images: string[];
@@ -56,13 +57,15 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
   return (
     <div>
       <div
-        className="aspect-[4/3] overflow-hidden rounded-xl bg-gray-100 mb-3 cursor-pointer"
+        className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-100 mb-3 cursor-pointer"
         onClick={() => openLightbox(selected)}
       >
-        <img
+        <Image
           src={images[selected]}
           alt={`${alt} - снимка ${selected + 1}`}
-          className="w-full h-full object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, 50vw"
+          className="object-cover"
         />
       </div>
       {images.length > 1 && (
@@ -75,7 +78,7 @@ export default function ImageGallery({ images, alt }: ImageGalleryProps) {
                 i === selected ? "border-[var(--color-primary)]" : "border-transparent"
               }`}
             >
-              <img src={img} alt={`${alt} - миниатюра ${i + 1}`} className="w-full h-full object-cover" />
+              <Image src={img} alt={`${alt} - миниатюра ${i + 1}`} width={80} height={80} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

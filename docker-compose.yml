@@ -4,8 +4,10 @@ services:
     environment:
       - NODE_ENV=production
       - ADMIN_SECRET=${ADMIN_SECRET}
-    expose:
-      - "3000"
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - NOTIFICATION_EMAIL=${NOTIFICATION_EMAIL}
+    ports:
+      - "3000:3000"
     volumes:
       - db-data:/app/data
       - uploads-data:/app/public/uploads

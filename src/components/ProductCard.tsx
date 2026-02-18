@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 interface ProductCardProps {
   id: number;
@@ -26,11 +27,13 @@ export default function ProductCard({
   return (
     <Link href={`/catalog/${id}`} className="group block">
       <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-        <div className="aspect-[4/3] overflow-hidden bg-gray-100">
-          <img
+        <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+          <Image
             src={firstImage}
             alt={name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </div>
         <div className="p-4">

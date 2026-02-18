@@ -49,8 +49,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Copy Prisma schema, generated client, and compiled seed
-COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/schema.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma/seed.js
+# Note: schema and seed go to /app/prisma-assets/ to avoid being hidden by the db-data volume on /app/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma-assets/schema.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma-assets/seed.js
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 
 # Copy entrypoint
