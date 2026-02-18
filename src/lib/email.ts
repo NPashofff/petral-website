@@ -11,7 +11,7 @@ function getResend(): Resend | null {
 }
 
 const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL || "admin@petral.bg";
-const FROM_EMAIL = "Petral <noreply@petral.bg>";
+const FROM_EMAIL = "Petralgroup <noreply@petralgroup.bg>";
 
 interface ContactData {
   name: string;

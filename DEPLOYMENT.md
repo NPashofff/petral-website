@@ -130,4 +130,7 @@ sudo docker restart ix-petral-web-petral-web-1
 
 # Pull нов image
 sudo docker pull npashofff/petral-web:latest
+
+# Build и push нов image към Docker Hub (от Mac, в проектната директория)
+docker buildx build --platform linux/amd64 -t npashofff/petral-web:latest --push /Users/niki/Documents/Projects/Petral
 ```
