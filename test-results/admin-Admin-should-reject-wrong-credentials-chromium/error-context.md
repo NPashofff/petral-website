@@ -1,0 +1,65 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "PetralGroup" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e6]:
+        - link "Начало" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - link "Каталог" [ref=e8] [cursor=pointer]:
+          - /url: /catalog
+        - link "За нас" [ref=e9] [cursor=pointer]:
+          - /url: /about
+        - link "Контакти" [ref=e10] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=e11]:
+    - generic [ref=e13]:
+      - generic [ref=e14]:
+        - heading "PetralAdmin" [level=1] [ref=e15]
+        - paragraph [ref=e16]: Вход в админ панела
+      - generic [ref=e17]:
+        - generic [ref=e18]: Невалидно потребителско име или парола
+        - generic [ref=e19]:
+          - generic [ref=e20]: Потребителско име
+          - textbox "Потребителско име" [ref=e21]: wrong
+        - generic [ref=e22]:
+          - generic [ref=e23]: Парола
+          - textbox "Парола" [ref=e24]: wrong
+        - button "Вход" [ref=e25]
+  - contentinfo [ref=e26]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - heading "PetralGroup" [level=3] [ref=e30]
+          - paragraph [ref=e31]: Вашият доверен партньор за трактори и АТВ-та. Качествена техника за земеделие и отдих.
+        - generic [ref=e32]:
+          - heading "Бързи връзки" [level=4] [ref=e33]
+          - list [ref=e34]:
+            - listitem [ref=e35]:
+              - link "Каталог" [ref=e36] [cursor=pointer]:
+                - /url: /catalog
+            - listitem [ref=e37]:
+              - link "Трактори" [ref=e38] [cursor=pointer]:
+                - /url: /catalog?category=TRACTOR
+            - listitem [ref=e39]:
+              - link "АТВ-та" [ref=e40] [cursor=pointer]:
+                - /url: /catalog?category=ATV
+            - listitem [ref=e41]:
+              - link "За нас" [ref=e42] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e43]:
+              - link "Контакти" [ref=e44] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e45]:
+          - heading "Контакти" [level=4] [ref=e46]
+          - list [ref=e47]:
+            - listitem [ref=e48]: 📍 гр. София, бул. Цариградско шосе 100
+            - listitem [ref=e49]: 📞 +359 888 123 456
+            - listitem [ref=e50]: ✉️ info@petralgroup.bg
+            - listitem [ref=e51]: "🕐 Понеделник - Петък: 09:00 - 18:00"
+      - paragraph [ref=e53]: © 2026 PetralGroup. Всички права запазени.
+  - alert [ref=e54]
+```

@@ -1,0 +1,122 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "PetralGroup" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e6]:
+        - link "Начало" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - link "Каталог" [ref=e8] [cursor=pointer]:
+          - /url: /catalog
+        - link "За нас" [ref=e9] [cursor=pointer]:
+          - /url: /about
+        - link "Контакти" [ref=e10] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - heading "Контакти" [level=1] [ref=e13]
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - heading "Изпратете ни съобщение" [level=2] [ref=e16]
+          - generic [ref=e17]:
+            - generic [ref=e18]:
+              - generic [ref=e19]: Име *
+              - textbox [active] [ref=e20]
+            - generic [ref=e21]:
+              - generic [ref=e22]: Имейл *
+              - textbox [ref=e23]
+            - generic [ref=e24]:
+              - generic [ref=e25]: Телефон
+              - textbox [ref=e26]
+            - generic [ref=e27]:
+              - generic [ref=e28]: Съобщение *
+              - textbox [ref=e29]
+            - button "Изпрати съобщение" [ref=e30]
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - heading "Данни за контакт" [level=2] [ref=e33]
+            - generic [ref=e34]:
+              - generic [ref=e35]:
+                - img [ref=e37]
+                - generic [ref=e40]:
+                  - heading "Адрес" [level=3] [ref=e41]
+                  - paragraph [ref=e42]: гр. София, бул. Цариградско шосе 100
+              - generic [ref=e43]:
+                - img [ref=e45]
+                - generic [ref=e47]:
+                  - heading "Телефон" [level=3] [ref=e48]
+                  - paragraph [ref=e49]: +359 888 123 456
+              - generic [ref=e50]:
+                - img [ref=e52]
+                - generic [ref=e54]:
+                  - heading "Имейл" [level=3] [ref=e55]
+                  - paragraph [ref=e56]: info@petralgroup.bg
+              - generic [ref=e57]:
+                - img [ref=e59]
+                - generic [ref=e61]:
+                  - heading "Работно време" [level=3] [ref=e62]
+                  - paragraph [ref=e63]: "Понеделник - Петък: 09:00 - 18:00"
+                  - paragraph [ref=e64]: "Събота: 10:00 - 14:00"
+                  - paragraph [ref=e65]: "Неделя: Затворено"
+          - iframe [ref=e67]:
+            - generic [ref=f1e3]:
+              - generic:
+                - button "Keyboard shortcuts"
+              - region "Map" [ref=f1e4]
+              - generic [ref=f1e5]:
+                - iframe [ref=f1e27]:
+                  
+                - link "View larger map" [ref=f1e32] [cursor=pointer]:
+                  - /url: https://maps.google.com/maps?ll=42.697694,23.321889&z=15&t=m&hl=en-US&gl=US&mapclient=embed
+                - button "Map camera controls" [ref=f1e34] [cursor=pointer]
+                - button "Show satellite imagery" [ref=f1e37] [cursor=pointer]:
+                  - generic [ref=f1e41]:
+                    - region [ref=f1e42]
+                    - iframe [ref=f1e48]:
+                      
+                - img "Google" [ref=f1e50]
+                - generic [ref=f1e51]:
+                  - button "Keyboard shortcuts" [ref=f1e57] [cursor=pointer]
+                  - generic [ref=f1e62]: Map data ©2026
+                  - link "Terms (opens in new tab)" [ref=f1e67] [cursor=pointer]:
+                    - /url: https://www.google.com/intl/en-US_US/help/terms_maps.html
+                    - text: Terms
+                  - link "Report a map error" [ref=f1e72] [cursor=pointer]:
+                    - /url: https://www.google.com/maps/@42.6976944,23.3218889,15z/data=!10m1!1e1!12b1?source=apiv3&rapsrc=apiv3
+  - contentinfo [ref=e68]:
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - heading "PetralGroup" [level=3] [ref=e72]
+          - paragraph [ref=e73]: Вашият доверен партньор за трактори и АТВ-та. Качествена техника за земеделие и отдих.
+        - generic [ref=e74]:
+          - heading "Бързи връзки" [level=4] [ref=e75]
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - link "Каталог" [ref=e78] [cursor=pointer]:
+                - /url: /catalog
+            - listitem [ref=e79]:
+              - link "Трактори" [ref=e80] [cursor=pointer]:
+                - /url: /catalog?category=TRACTOR
+            - listitem [ref=e81]:
+              - link "АТВ-та" [ref=e82] [cursor=pointer]:
+                - /url: /catalog?category=ATV
+            - listitem [ref=e83]:
+              - link "За нас" [ref=e84] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e85]:
+              - link "Контакти" [ref=e86] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e87]:
+          - heading "Контакти" [level=4] [ref=e88]
+          - list [ref=e89]:
+            - listitem [ref=e90]: 📍 гр. София, бул. Цариградско шосе 100
+            - listitem [ref=e91]: 📞 +359 888 123 456
+            - listitem [ref=e92]: ✉️ info@petralgroup.bg
+            - listitem [ref=e93]: "🕐 Понеделник - Петък: 09:00 - 18:00"
+      - paragraph [ref=e95]: © 2026 PetralGroup. Всички права запазени.
+  - alert [ref=e96]
+```

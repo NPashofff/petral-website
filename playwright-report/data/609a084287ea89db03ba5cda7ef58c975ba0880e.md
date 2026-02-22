@@ -1,0 +1,274 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "PetralGroup" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e6]:
+        - link "Начало" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - link "Каталог" [ref=e8] [cursor=pointer]:
+          - /url: /catalog
+        - link "За нас" [ref=e9] [cursor=pointer]:
+          - /url: /about
+        - link "Контакти" [ref=e10] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - heading "Каталог" [level=1] [ref=e13]
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]: Категория
+          - combobox [ref=e18]:
+            - option "Всички" [selected]
+            - option "Трактори"
+            - option "АТВ-та"
+        - generic [ref=e19]:
+          - generic [ref=e20]: Марка
+          - combobox [ref=e21]:
+            - option "Всички" [selected]
+            - option "Hisun"
+            - option "Linhai"
+            - option "TYM"
+        - generic [ref=e22]:
+          - generic [ref=e23]: Мин. цена
+          - spinbutton [ref=e24]
+        - generic [ref=e25]:
+          - generic [ref=e26]: Макс. цена
+          - spinbutton [ref=e27]
+      - paragraph [ref=e28]: 18 продукта
+      - generic [ref=e29]:
+        - link "UTV Linhai T-Boss 570 АТВ 2025 UTV Linhai T-Boss 570 Linhai 18 854 лв." [ref=e30] [cursor=pointer]:
+          - /url: /catalog/18
+          - generic [ref=e31]:
+            - img "UTV Linhai T-Boss 570" [ref=e33]
+            - generic [ref=e34]:
+              - generic [ref=e35]:
+                - generic [ref=e36]: АТВ
+                - generic [ref=e37]: "2025"
+              - heading "UTV Linhai T-Boss 570" [level=3] [ref=e38]
+              - paragraph [ref=e39]: Linhai
+              - paragraph [ref=e40]: 18 854 лв.
+        - link "UTV Linhai LH 1100 U-Diesel АТВ 2025 UTV Linhai LH 1100 U-Diesel Linhai 30 159 лв." [ref=e41] [cursor=pointer]:
+          - /url: /catalog/17
+          - generic [ref=e42]:
+            - img "UTV Linhai LH 1100 U-Diesel" [ref=e44]
+            - generic [ref=e45]:
+              - generic [ref=e46]:
+                - generic [ref=e47]: АТВ
+                - generic [ref=e48]: "2025"
+              - heading "UTV Linhai LH 1100 U-Diesel" [level=3] [ref=e49]
+              - paragraph [ref=e50]: Linhai
+              - paragraph [ref=e51]: 30 159 лв.
+        - link "UTV Hisun Strike 250 АТВ 2025 UTV Hisun Strike 250 Hisun 10 649 лв." [ref=e52] [cursor=pointer]:
+          - /url: /catalog/16
+          - generic [ref=e53]:
+            - img "UTV Hisun Strike 250" [ref=e55]
+            - generic [ref=e56]:
+              - generic [ref=e57]:
+                - generic [ref=e58]: АТВ
+                - generic [ref=e59]: "2025"
+              - heading "UTV Hisun Strike 250" [level=3] [ref=e60]
+              - paragraph [ref=e61]: Hisun
+              - paragraph [ref=e62]: 10 649 лв.
+        - link "UTV Hisun Sector 550 АТВ 2025 UTV Hisun Sector 550 Hisun 19 979 лв." [ref=e63] [cursor=pointer]:
+          - /url: /catalog/15
+          - generic [ref=e64]:
+            - img "UTV Hisun Sector 550" [ref=e66]
+            - generic [ref=e67]:
+              - generic [ref=e68]:
+                - generic [ref=e69]: АТВ
+                - generic [ref=e70]: "2025"
+              - heading "UTV Hisun Sector 550" [level=3] [ref=e71]
+              - paragraph [ref=e72]: Hisun
+              - paragraph [ref=e73]: 19 979 лв.
+        - link "ATV Linhai Promax 650L АТВ 2025 ATV Linhai Promax 650L Linhai 14 170 лв." [ref=e74] [cursor=pointer]:
+          - /url: /catalog/14
+          - generic [ref=e75]:
+            - img "ATV Linhai Promax 650L" [ref=e77]
+            - generic [ref=e78]:
+              - generic [ref=e79]:
+                - generic [ref=e80]: АТВ
+                - generic [ref=e81]: "2025"
+              - heading "ATV Linhai Promax 650L" [level=3] [ref=e82]
+              - paragraph [ref=e83]: Linhai
+              - paragraph [ref=e84]: 14 170 лв.
+        - link "ATV Linhai Promax 550 АТВ 2025 ATV Linhai Promax 550 Linhai 11 862 лв." [ref=e85] [cursor=pointer]:
+          - /url: /catalog/13
+          - generic [ref=e86]:
+            - img "ATV Linhai Promax 550" [ref=e88]
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - generic [ref=e91]: АТВ
+                - generic [ref=e92]: "2025"
+              - heading "ATV Linhai Promax 550" [level=3] [ref=e93]
+              - paragraph [ref=e94]: Linhai
+              - paragraph [ref=e95]: 11 862 лв.
+        - link "ATV Linhai M210 АТВ 2025 ATV Linhai M210 Linhai 6259 лв." [ref=e96] [cursor=pointer]:
+          - /url: /catalog/12
+          - generic [ref=e97]:
+            - img "ATV Linhai M210" [ref=e99]
+            - generic [ref=e100]:
+              - generic [ref=e101]:
+                - generic [ref=e102]: АТВ
+                - generic [ref=e103]: "2025"
+              - heading "ATV Linhai M210" [level=3] [ref=e104]
+              - paragraph [ref=e105]: Linhai
+              - paragraph [ref=e106]: 6259 лв.
+        - link "ATV Linhai F320 АТВ 2025 ATV Linhai F320 Linhai 9828 лв." [ref=e107] [cursor=pointer]:
+          - /url: /catalog/11
+          - generic [ref=e108]:
+            - img "ATV Linhai F320" [ref=e110]
+            - generic [ref=e111]:
+              - generic [ref=e112]:
+                - generic [ref=e113]: АТВ
+                - generic [ref=e114]: "2025"
+              - heading "ATV Linhai F320" [level=3] [ref=e115]
+              - paragraph [ref=e116]: Linhai
+              - paragraph [ref=e117]: 9828 лв.
+        - link "ATV Hisun Guardian 750L АТВ 2025 ATV Hisun Guardian 750L Hisun 15 578 лв." [ref=e118] [cursor=pointer]:
+          - /url: /catalog/10
+          - generic [ref=e119]:
+            - img "ATV Hisun Guardian 750L" [ref=e121]
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - generic [ref=e124]: АТВ
+                - generic [ref=e125]: "2025"
+              - heading "ATV Hisun Guardian 750L" [level=3] [ref=e126]
+              - paragraph [ref=e127]: Hisun
+              - paragraph [ref=e128]: 15 578 лв.
+        - link "ATV Hisun Guardian 750 АТВ 2025 ATV Hisun Guardian 750 Hisun 15 510 лв." [ref=e129] [cursor=pointer]:
+          - /url: /catalog/9
+          - generic [ref=e130]:
+            - img "ATV Hisun Guardian 750" [ref=e132]
+            - generic [ref=e133]:
+              - generic [ref=e134]:
+                - generic [ref=e135]: АТВ
+                - generic [ref=e136]: "2025"
+              - heading "ATV Hisun Guardian 750" [level=3] [ref=e137]
+              - paragraph [ref=e138]: Hisun
+              - paragraph [ref=e139]: 15 510 лв.
+        - link "ATV Hisun Guardian 400 АТВ 2025 ATV Hisun Guardian 400 Hisun 11 481 лв." [ref=e140] [cursor=pointer]:
+          - /url: /catalog/8
+          - generic [ref=e141]:
+            - img "ATV Hisun Guardian 400" [ref=e143]
+            - generic [ref=e144]:
+              - generic [ref=e145]:
+                - generic [ref=e146]: АТВ
+                - generic [ref=e147]: "2025"
+              - heading "ATV Hisun Guardian 400" [level=3] [ref=e148]
+              - paragraph [ref=e149]: Hisun
+              - paragraph [ref=e150]: 11 481 лв.
+        - link "Трактор TYM T6130 Трактор 2025 Трактор TYM T6130 TYM 0 лв." [ref=e151] [cursor=pointer]:
+          - /url: /catalog/7
+          - generic [ref=e152]:
+            - img "Трактор TYM T6130" [ref=e154]
+            - generic [ref=e155]:
+              - generic [ref=e156]:
+                - generic [ref=e157]: Трактор
+                - generic [ref=e158]: "2025"
+              - heading "Трактор TYM T6130" [level=3] [ref=e159]
+              - paragraph [ref=e160]: TYM
+              - paragraph [ref=e161]: 0 лв.
+        - link "Трактор TYM T6115 Трактор 2025 Трактор TYM T6115 TYM 0 лв." [ref=e162] [cursor=pointer]:
+          - /url: /catalog/6
+          - generic [ref=e163]:
+            - img "Трактор TYM T6115" [ref=e165]
+            - generic [ref=e166]:
+              - generic [ref=e167]:
+                - generic [ref=e168]: Трактор
+                - generic [ref=e169]: "2025"
+              - heading "Трактор TYM T6115" [level=3] [ref=e170]
+              - paragraph [ref=e171]: TYM
+              - paragraph [ref=e172]: 0 лв.
+        - link "Трактор TYM T5075 Трактор 2025 Трактор TYM T5075 TYM 0 лв." [ref=e173] [cursor=pointer]:
+          - /url: /catalog/5
+          - generic [ref=e174]:
+            - img "Трактор TYM T5075" [ref=e176]
+            - generic [ref=e177]:
+              - generic [ref=e178]:
+                - generic [ref=e179]: Трактор
+                - generic [ref=e180]: "2025"
+              - heading "Трактор TYM T5075" [level=3] [ref=e181]
+              - paragraph [ref=e182]: TYM
+              - paragraph [ref=e183]: 0 лв.
+        - link "Трактор TYM T5068 Трактор 2025 Трактор TYM T5068 TYM 0 лв." [ref=e184] [cursor=pointer]:
+          - /url: /catalog/4
+          - generic [ref=e185]:
+            - img "Трактор TYM T5068" [ref=e187]
+            - generic [ref=e188]:
+              - generic [ref=e189]:
+                - generic [ref=e190]: Трактор
+                - generic [ref=e191]: "2025"
+              - heading "Трактор TYM T5068" [level=3] [ref=e192]
+              - paragraph [ref=e193]: TYM
+              - paragraph [ref=e194]: 0 лв.
+        - link "Трактор TYM T3048 Трактор 2025 Трактор TYM T3048 TYM 0 лв." [ref=e195] [cursor=pointer]:
+          - /url: /catalog/3
+          - generic [ref=e196]:
+            - img "Трактор TYM T3048" [ref=e198]
+            - generic [ref=e199]:
+              - generic [ref=e200]:
+                - generic [ref=e201]: Трактор
+                - generic [ref=e202]: "2025"
+              - heading "Трактор TYM T3048" [level=3] [ref=e203]
+              - paragraph [ref=e204]: TYM
+              - paragraph [ref=e205]: 0 лв.
+        - link "Трактор TYM T2025P Трактор 2025 Трактор TYM T2025P TYM 0 лв." [ref=e206] [cursor=pointer]:
+          - /url: /catalog/2
+          - generic [ref=e207]:
+            - img "Трактор TYM T2025P" [ref=e209]
+            - generic [ref=e210]:
+              - generic [ref=e211]:
+                - generic [ref=e212]: Трактор
+                - generic [ref=e213]: "2025"
+              - heading "Трактор TYM T2025P" [level=3] [ref=e214]
+              - paragraph [ref=e215]: TYM
+              - paragraph [ref=e216]: 0 лв.
+        - link "Трактор TYM T1025 Трактор 2025 Трактор TYM T1025 TYM 0 лв." [ref=e217] [cursor=pointer]:
+          - /url: /catalog/1
+          - generic [ref=e218]:
+            - img "Трактор TYM T1025" [ref=e220]
+            - generic [ref=e221]:
+              - generic [ref=e222]:
+                - generic [ref=e223]: Трактор
+                - generic [ref=e224]: "2025"
+              - heading "Трактор TYM T1025" [level=3] [ref=e225]
+              - paragraph [ref=e226]: TYM
+              - paragraph [ref=e227]: 0 лв.
+  - contentinfo [ref=e228]:
+    - generic [ref=e229]:
+      - generic [ref=e230]:
+        - generic [ref=e231]:
+          - heading "PetralGroup" [level=3] [ref=e232]
+          - paragraph [ref=e233]: Вашият доверен партньор за трактори TYM и ATV/UTV. Качествена техника за земеделие и отдих.
+        - generic [ref=e234]:
+          - heading "Бързи връзки" [level=4] [ref=e235]
+          - list [ref=e236]:
+            - listitem [ref=e237]:
+              - link "Каталог" [ref=e238] [cursor=pointer]:
+                - /url: /catalog
+            - listitem [ref=e239]:
+              - link "Трактори" [ref=e240] [cursor=pointer]:
+                - /url: /catalog?category=TRACTOR
+            - listitem [ref=e241]:
+              - link "АТВ-та" [ref=e242] [cursor=pointer]:
+                - /url: /catalog?category=ATV
+            - listitem [ref=e243]:
+              - link "За нас" [ref=e244] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e245]:
+              - link "Контакти" [ref=e246] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e247]:
+          - heading "Контакти" [level=4] [ref=e248]
+          - list [ref=e249]:
+            - listitem [ref=e250]: 📍 1588 София, Софийски околовръстен път 459
+            - listitem [ref=e251]: 📞 +359 878 209 939
+            - listitem [ref=e252]: ✉️ info@petral.bg
+            - listitem [ref=e253]: "🕐 Понеделник - Петък: 09:00 - 18:00"
+      - paragraph [ref=e255]: © 2026 PetralGroup. Всички права запазени.
+  - alert [ref=e256]
+```

@@ -1,0 +1,103 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "PetralGroup" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e6]:
+        - link "Начало" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - link "Каталог" [ref=e8] [cursor=pointer]:
+          - /url: /catalog
+        - link "За нас" [ref=e9] [cursor=pointer]:
+          - /url: /about
+        - link "Контакти" [ref=e10] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=e11]:
+    - generic [ref=e12]:
+      - navigation [ref=e13]:
+        - link "Начало" [ref=e14] [cursor=pointer]:
+          - /url: /
+        - text: /
+        - link "Каталог" [ref=e15] [cursor=pointer]:
+          - /url: /catalog
+        - text: /UTV Linhai T-Boss 570
+      - generic [ref=e16]:
+        - img "UTV Linhai T-Boss 570 - снимка 1" [ref=e19] [cursor=pointer]
+        - generic [ref=e20]:
+          - text: АТВ
+          - heading "UTV Linhai T-Boss 570" [level=1] [ref=e21]
+          - paragraph [ref=e22]: 18 854 лв.
+          - paragraph [ref=e23]: Linhai T-Boss 570 е мощен работен UTV с 499.5 cc EFI двигател и канадска CVTech трансмисия. Оборудван с EPS, самосвален товарен отсек с товароносимост 300 кг, лебедка и теглич. Подходящ за стопанства, ловни територии и офроуд експедиции.
+          - generic [ref=e24]:
+            - heading "Характеристики" [level=2] [ref=e25]
+            - generic [ref=e26]:
+              - generic [ref=e27]:
+                - generic [ref=e28]: Марка
+                - generic [ref=e29]: Linhai
+              - generic [ref=e30]:
+                - generic [ref=e31]: Година
+                - generic [ref=e32]: "2025"
+              - generic [ref=e33]:
+                - generic [ref=e34]: Категория
+                - generic [ref=e35]: АТВ
+              - generic [ref=e36]:
+                - generic [ref=e37]: Мощност
+                - generic [ref=e38]: 38.2 к.с. (28.5 kW)
+              - generic [ref=e39]:
+                - generic [ref=e40]: Двигател
+                - generic [ref=e41]: LH191MR-C, 499.5 куб.см, течно охлаждане, EFI
+              - generic [ref=e42]:
+                - generic [ref=e43]: Тегло
+                - generic [ref=e44]: 540 кг
+          - generic [ref=e46]:
+            - heading "Поискай оферта" [level=3] [ref=e47]
+            - generic [ref=e48]:
+              - generic [ref=e49]: Име *
+              - textbox [ref=e50]
+            - generic [ref=e51]:
+              - generic [ref=e52]: Имейл *
+              - textbox [ref=e53]
+            - generic [ref=e54]:
+              - generic [ref=e55]: Телефон
+              - textbox [ref=e56]
+            - generic [ref=e57]:
+              - generic [ref=e58]: Съобщение *
+              - textbox [ref=e59]: Здравейте, интересувам се от UTV Linhai T-Boss 570. Моля, изпратете ми оферта.
+            - button "Изпрати запитване" [ref=e60]
+  - contentinfo [ref=e61]:
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - heading "PetralGroup" [level=3] [ref=e65]
+          - paragraph [ref=e66]: Вашият доверен партньор за трактори TYM и ATV/UTV. Качествена техника за земеделие и отдих.
+        - generic [ref=e67]:
+          - heading "Бързи връзки" [level=4] [ref=e68]
+          - list [ref=e69]:
+            - listitem [ref=e70]:
+              - link "Каталог" [ref=e71] [cursor=pointer]:
+                - /url: /catalog
+            - listitem [ref=e72]:
+              - link "Трактори" [ref=e73] [cursor=pointer]:
+                - /url: /catalog?category=TRACTOR
+            - listitem [ref=e74]:
+              - link "АТВ-та" [ref=e75] [cursor=pointer]:
+                - /url: /catalog?category=ATV
+            - listitem [ref=e76]:
+              - link "За нас" [ref=e77] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e78]:
+              - link "Контакти" [ref=e79] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e80]:
+          - heading "Контакти" [level=4] [ref=e81]
+          - list [ref=e82]:
+            - listitem [ref=e83]: 📍 1588 София, Софийски околовръстен път 459
+            - listitem [ref=e84]: 📞 +359 878 209 939
+            - listitem [ref=e85]: ✉️ info@petral.bg
+            - listitem [ref=e86]: "🕐 Понеделник - Петък: 09:00 - 18:00"
+      - paragraph [ref=e88]: © 2026 PetralGroup. Всички права запазени.
+  - alert [ref=e89]: UTV Linhai T-Boss 570 - PetralGroup
+```

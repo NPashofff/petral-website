@@ -1,0 +1,88 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "PetralGroup" [ref=e5] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e6]:
+        - link "Начало" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - link "Каталог" [ref=e8] [cursor=pointer]:
+          - /url: /catalog
+        - link "За нас" [ref=e9] [cursor=pointer]:
+          - /url: /about
+        - link "Контакти" [ref=e10] [cursor=pointer]:
+          - /url: /contact
+  - main [ref=e11]:
+    - generic [ref=e15]:
+      - heading "Качествена техника за земеделие и отдих" [level=1] [ref=e16]
+      - paragraph [ref=e17]: PetralGroup е вашият доверен партньор за продажба на трактори и АТВ-та. Предлагаме широка гама техника с гарантирано качество.
+      - generic [ref=e18]:
+        - link "Разгледай каталога" [ref=e19] [cursor=pointer]:
+          - /url: /catalog
+        - link "Свържете се с нас" [ref=e20] [cursor=pointer]:
+          - /url: /contact
+    - generic [ref=e22]:
+      - heading "Нашите категории" [level=2] [ref=e23]
+      - generic [ref=e24]:
+        - link "Трактори Разгледай всички модели" [ref=e25] [cursor=pointer]:
+          - /url: /catalog?category=TRACTOR
+          - generic [ref=e27]:
+            - heading "Трактори" [level=3] [ref=e28]
+            - paragraph [ref=e29]: Разгледай всички модели
+        - link "АТВ-та Разгледай всички модели" [ref=e30] [cursor=pointer]:
+          - /url: /catalog?category=ATV
+          - generic [ref=e32]:
+            - heading "АТВ-та" [level=3] [ref=e33]
+            - paragraph [ref=e34]: Разгледай всички модели
+    - generic [ref=e36]:
+      - heading "Защо PetralGroup?" [level=2] [ref=e37]
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - img [ref=e41]
+          - heading "Гарантирано качество" [level=3] [ref=e43]
+          - paragraph [ref=e44]: Всички наши продукти са внимателно подбрани и проверени.
+        - generic [ref=e45]:
+          - img [ref=e47]
+          - heading "Конкурентни цени" [level=3] [ref=e49]
+          - paragraph [ref=e50]: Предлагаме най-добрите цени на пазара с гъвкави условия.
+        - generic [ref=e51]:
+          - img [ref=e53]
+          - heading "Сервиз и поддръжка" [level=3] [ref=e55]
+          - paragraph [ref=e56]: Пълно сервизно обслужване и поддръжка на техниката.
+  - contentinfo [ref=e57]:
+    - generic [ref=e58]:
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - heading "PetralGroup" [level=3] [ref=e61]
+          - paragraph [ref=e62]: Вашият доверен партньор за трактори и АТВ-та. Качествена техника за земеделие и отдих.
+        - generic [ref=e63]:
+          - heading "Бързи връзки" [level=4] [ref=e64]
+          - list [ref=e65]:
+            - listitem [ref=e66]:
+              - link "Каталог" [ref=e67] [cursor=pointer]:
+                - /url: /catalog
+            - listitem [ref=e68]:
+              - link "Трактори" [ref=e69] [cursor=pointer]:
+                - /url: /catalog?category=TRACTOR
+            - listitem [ref=e70]:
+              - link "АТВ-та" [ref=e71] [cursor=pointer]:
+                - /url: /catalog?category=ATV
+            - listitem [ref=e72]:
+              - link "За нас" [ref=e73] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e74]:
+              - link "Контакти" [ref=e75] [cursor=pointer]:
+                - /url: /contact
+        - generic [ref=e76]:
+          - heading "Контакти" [level=4] [ref=e77]
+          - list [ref=e78]:
+            - listitem [ref=e79]: 📍 гр. София, бул. Цариградско шосе 100
+            - listitem [ref=e80]: 📞 +359 888 123 456
+            - listitem [ref=e81]: ✉️ info@petralgroup.bg
+            - listitem [ref=e82]: "🕐 Понеделник - Петък: 09:00 - 18:00"
+      - paragraph [ref=e84]: © 2026 PetralGroup. Всички права запазени.
+  - alert [ref=e85]
+```
