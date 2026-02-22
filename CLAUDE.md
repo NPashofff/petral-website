@@ -1,5 +1,16 @@
 # Claude Instructions for Petral Project
 
+## Notifications
+
+**IMPORTANT: Always emit a sound notification when:**
+- Requesting user permission (e.g., "Do you want to proceed?")
+- Completing a task
+- Encountering an error that needs user attention
+
+Use `\a` (bell character) or explicit notification in the message.
+
+When task is complete, add 😊 emoji at the end.
+
 ## Docker Hub Publishing
 
 **IMPORTANT: Do NOT push to Docker Hub automatically. Only push when explicitly asked by the user.**
