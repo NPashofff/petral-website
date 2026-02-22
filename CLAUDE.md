@@ -1,5 +1,9 @@
 # Claude Instructions for Petral Project
 
+## Docker Hub Publishing
+
+**IMPORTANT: Do NOT push to Docker Hub automatically. Only push when explicitly asked by the user.**
+
 ## Testing Protocol
 
 **IMPORTANT: Always test changes using Playwright UI mode before committing.**
