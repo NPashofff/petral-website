@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, slug, description, price, category, brand, year, horsepower, engine, weight, images, featured } = body;
 
-    if (!name || !slug || !description || !price || !category || !brand || !year) {
+    if (!name || !slug || !description || price == null || !category || !brand || !year) {
       return NextResponse.json({ error: "Моля, попълнете всички задължителни полета." }, { status: 400 });
     }
 
