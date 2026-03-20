@@ -5,7 +5,7 @@ interface ProductCardProps {
   id: number;
   name: string;
   slug: string;
-  price: number;
+  price: number | null;
   category: string;
   brand: string;
   year: number;
@@ -54,7 +54,7 @@ export default function ProductCard({
           </h3>
           <p className="text-sm text-gray-500 mt-1">{brand}</p>
           <p className="text-xl font-bold text-[var(--color-primary)] mt-2">
-            {price.toLocaleString("bg-BG")} лв.
+            {price != null ? `${price.toLocaleString("bg-BG")} лв.` : "-"}
           </p>
         </div>
       </div>

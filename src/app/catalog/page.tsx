@@ -19,7 +19,7 @@ interface CatalogPageProps {
   }>;
 }
 
-async function CatalogContent({ searchParams }: CatalogPageProps) {
+async function ProductList({ searchParams }: CatalogPageProps) {
   const params = await searchParams;
   const { category, brand, minPrice, maxPrice } = params;
 
@@ -32,42 +32,41 @@ async function CatalogContent({ searchParams }: CatalogPageProps) {
     if (maxPrice) where.price.lte = parseFloat(maxPrice);
   }
 
-  const [products, brands] = await Promise.all([
-    prisma.product.findMany({ where, orderBy: { createdAt: "desc" } }),
-    prisma.product.findMany({ select: { brand: true }, distinct: ["brand"], orderBy: { brand: "asc" } }),
-  ]);
+  const products = await prisma.product.findMany({ where, orderBy: { createdAt: "desc" } });
 
-  const brandList = brands.map((b) => b.brand);
-
-  return (
+  return products.length === 0 ? (
+    <div className="text-center py-16">
+      <p className="text-gray-500 text-lg">Няма намерени продукти.</p>
+      <p className="text-gray-400 text-sm mt-2">Опитайте с различни филтри.</p>
+    </div>
+  ) : (
     <>
-      <ProductFilter brands={brandList} />
-
-      {products.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-gray-500 text-lg">Няма намерени продукти.</p>
-          <p className="text-gray-400 text-sm mt-2">Опитайте с различни филтри.</p>
-        </div>
-      ) : (
-        <>
-          <p className="text-gray-500 mb-6">{products.length} продукт{products.length !== 1 ? "а" : ""}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
-          </div>
-        </>
-      )}
+      <p className="text-gray-500 mb-6">{products.length} продукт{products.length !== 1 ? "а" : ""}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <ProductCard key={product.id} {...product} />
+        ))}
+      </div>
     </>
   );
 }
 
-export default function CatalogPage(props: CatalogPageProps) {
+export default async function CatalogPage(props: CatalogPageProps) {
+  const brands = await prisma.product.findMany({
+    select: { brand: true },
+    distinct: ["brand"],
+    orderBy: { brand: "asc" },
+  });
+  const brandList = brands.map((b) => b.brand);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Каталог</h1>
+      <Suspense fallback={<div className="bg-white rounded-xl shadow-md p-6 mb-8 h-20" />}>
+        <ProductFilter brands={brandList} />
+      </Suspense>
       <Suspense fallback={<div className="text-center py-16 text-gray-400">Зареждане...</div>}>
-        <CatalogContent searchParams={props.searchParams} />
+        <ProductList searchParams={props.searchParams} />
       </Suspense>
     </div>
   );

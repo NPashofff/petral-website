@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
 type Section = {
   title: string;
-  fields: { key: string; label: string; type: "input" | "textarea" | "color" }[];
+  fields: { key: string; label: string; type: "input" | "textarea" | "color" | "hidden" }[];
 };
 
 const sections: Section[] = [
@@ -15,6 +18,8 @@ const sections: Section[] = [
       { key: "contact_phone", label: "Телефон", type: "input" },
       { key: "contact_email", label: "Имейл", type: "input" },
       { key: "contact_hours", label: "Работно време", type: "textarea" },
+      { key: "contact_lat", label: "Ширина (lat)", type: "hidden" },
+      { key: "contact_lon", label: "Дължина (lon)", type: "hidden" },
     ],
   },
   {
@@ -132,51 +137,72 @@ export default function AdminContentPage() {
           <div key={section.title} className="bg-white rounded-xl shadow-md p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">{section.title}</h2>
             <div className="space-y-4">
-              {section.fields.map((field) => (
-                <div key={field.key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {field.label}
-                  </label>
-                  {field.type === "textarea" ? (
-                    <textarea
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      rows={3}
-                      value={values[field.key] ?? ""}
-                      onChange={(e) =>
-                        setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
-                      }
-                    />
-                  ) : field.type === "color" ? (
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        className="h-10 w-14 cursor-pointer rounded border border-gray-300"
-                        value={values[field.key] ?? "#000000"}
-                        onChange={(e) =>
-                          setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
-                        }
-                      />
-                      <input
-                        type="text"
-                        className="w-28 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              {section.fields.map((field) => {
+                if (field.type === "hidden") return null;
+                return (
+                  <div key={field.key}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {field.label}
+                    </label>
+                    {field.type === "textarea" ? (
+                      <textarea
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows={3}
                         value={values[field.key] ?? ""}
                         onChange={(e) =>
                           setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
                         }
                       />
-                    </div>
-                  ) : (
-                    <input
-                      type="text"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      value={values[field.key] ?? ""}
-                      onChange={(e) =>
-                        setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
-                      }
-                    />
-                  )}
-                </div>
-              ))}
+                    ) : field.type === "color" ? (
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          className="h-10 w-14 cursor-pointer rounded border border-gray-300"
+                          value={values[field.key] ?? "#000000"}
+                          onChange={(e) =>
+                            setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
+                          }
+                        />
+                        <input
+                          type="text"
+                          className="w-28 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          value={values[field.key] ?? ""}
+                          onChange={(e) =>
+                            setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
+                          }
+                        />
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        value={values[field.key] ?? ""}
+                        onChange={(e) =>
+                          setValues((prev) => ({ ...prev, [field.key]: e.target.value }))
+                        }
+                      />
+                    )}
+                    {/* Show map picker after the address field in Contacts section */}
+                    {field.key === "contact_address" && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500 mb-1">Избери позиция на картата (по избор)</p>
+                        <MapPicker
+                          lat={values.contact_lat ? parseFloat(values.contact_lat) : null}
+                          lon={values.contact_lon ? parseFloat(values.contact_lon) : null}
+                          address={values.contact_address ?? ""}
+                          onChange={(lat, lon) =>
+                            setValues((prev) => ({
+                              ...prev,
+                              contact_lat: lat != null ? String(lat) : "",
+                              contact_lon: lon != null ? String(lon) : "",
+                            }))
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <div className="mt-4 flex justify-end">
               <button

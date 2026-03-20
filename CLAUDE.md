@@ -2,14 +2,12 @@
 
 ## Notifications
 
-**IMPORTANT: Always emit a sound notification when:**
-- Requesting user permission (e.g., "Do you want to proceed?")
-- Completing a task
+**IMPORTANT: Always emit a sound notification (`afplay /System/Library/Sounds/Glass.aiff`) when:**
+- Requesting user permission or asking a question (e.g., AskUserQuestion, "Do you want to proceed?")
+- Completing a task (BEFORE the 😊 emoji)
 - Encountering an error that needs user attention
 
-Use `\a` (bell character) or explicit notification in the message.
-
-When task is complete, add 😊 emoji at the end.
+When task is complete, emit sound FIRST, then add 😊 emoji at the end.
 
 ## Docker Hub Publishing
 

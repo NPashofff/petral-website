@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import ImageGallery from "@/components/ImageGallery";
 import InquiryForm from "@/components/InquiryForm";
+import ProductMapLoader from "@/components/ProductMapLoader";
 import type { Metadata } from "next";
 
 interface ProductPageProps {
@@ -16,7 +17,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
   return {
     title: `${product.name} - PetralGroup`,
-    description: product.description.slice(0, 160),
+    description: product.description.replace(/<[^>]*>/g, '').slice(0, 160),
   };
 }
 
@@ -68,10 +69,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           <h1 className="text-3xl font-bold text-gray-900 mt-4">{product.name}</h1>
           <p className="text-3xl font-bold text-[var(--color-primary)] mt-4">
-            {product.price.toLocaleString("bg-BG")} лв.
+            {product.price != null ? `${product.price.toLocaleString("bg-BG")} лв.` : "-"}
           </p>
 
-          <p className="text-gray-600 mt-6 leading-relaxed">{product.description}</p>
+          <div
+            className="text-gray-600 mt-6 leading-relaxed prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: product.description }}
+          />
 
           {/* Specs table */}
           <div className="mt-8">
@@ -92,6 +96,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
               ))}
             </div>
           </div>
+
+          {/* Map */}
+          {product.address && (
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-3">Местоположение</h2>
+              <p className="text-sm text-gray-500 mb-2">{product.address}</p>
+              <ProductMapLoader address={product.address} lat={product.lat} lon={product.lon} />
+            </div>
+          )}
 
           {/* Inquiry form */}
           <div className="mt-8">

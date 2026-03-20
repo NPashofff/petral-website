@@ -12,7 +12,7 @@ model Product {
   name        String
   slug        String    @unique
   description String
-  price       Float
+  price       Float?
   category    String    // TRACTOR or ATV
   brand       String
   year        Int
@@ -20,6 +20,9 @@ model Product {
   engine      String?
   weight      String?
   images      String    // JSON array stored as string
+  address     String?
+  lat         Float?
+  lon         Float?
   featured    Boolean   @default(false)
   createdAt   DateTime  @default(now())
   inquiries   Inquiry[]

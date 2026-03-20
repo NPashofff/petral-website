@@ -2,12 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useRef } from "react";
+import dynamic from "next/dynamic";
+
+const RichTextEditor = dynamic(() => import("./RichTextEditor"), { ssr: false });
 
 interface ProductFormData {
   name: string;
   slug: string;
   description: string;
-  price: number;
+  price: number | null;
   category: string;
   brand: string;
   year: number;
@@ -15,6 +18,9 @@ interface ProductFormData {
   engine: string;
   weight: string;
   images: string;
+  address: string;
+  lat: number | null;
+  lon: number | null;
   featured: boolean;
 }
 
@@ -27,7 +33,7 @@ const defaultData: ProductFormData = {
   name: "",
   slug: "",
   description: "",
-  price: 0,
+  price: null,
   category: "TRACTOR",
   brand: "",
   year: new Date().getFullYear(),
@@ -35,6 +41,9 @@ const defaultData: ProductFormData = {
   engine: "",
   weight: "",
   images: "[]",
+  address: "",
+  lat: null,
+  lon: null,
   featured: false,
 };
 
@@ -184,24 +193,34 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Описание *</label>
-        <textarea
-          required
-          rows={4}
+        <RichTextEditor
           value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          onChange={(val) => setForm({ ...form, description: val })}
+        />
+        {/* Hidden input to track description value */}
+        <input
+          type="text"
+          value={form.description.replace(/<[^>]*>/g, '').trim()}
+          onChange={() => {}}
+          tabIndex={-1}
+          aria-hidden
+          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', height: 0 }}
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Цена (лв.) *</label>
+          <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-1">Цена (лв.)</label>
           <input
+            id="product-price"
             type="number"
-            required
             min={0}
-            value={form.price}
-            onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+            value={form.price ?? ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm({ ...form, price: val === "" ? null : parseFloat(val) });
+            }}
+            placeholder="Оставете празно за '-'"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
         </div>

@@ -10,6 +10,7 @@ export default function ContactForm() {
     message: "",
   });
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +27,12 @@ export default function ContactForm() {
         setStatus("sent");
         setFormData({ name: "", email: "", phone: "", message: "" });
       } else {
+        const data = await res.json().catch(() => ({}));
+        setErrorMessage(data.error || "Грешка при изпращане. Опитайте отново.");
         setStatus("error");
       }
     } catch {
+      setErrorMessage("Грешка при изпращане. Опитайте отново.");
       setStatus("error");
     }
   };
@@ -45,8 +49,9 @@ export default function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Име *</label>
+        <label htmlFor="contact-name" className="block text-sm font-medium text-gray-700 mb-1">Име *</label>
         <input
+          id="contact-name"
           type="text"
           required
           value={formData.name}
@@ -56,8 +61,9 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Имейл *</label>
+        <label htmlFor="contact-email" className="block text-sm font-medium text-gray-700 mb-1">Имейл *</label>
         <input
+          id="contact-email"
           type="email"
           required
           value={formData.email}
@@ -67,8 +73,9 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
+        <label htmlFor="contact-phone" className="block text-sm font-medium text-gray-700 mb-1">Телефон</label>
         <input
+          id="contact-phone"
           type="tel"
           value={formData.phone}
           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -77,8 +84,9 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Съобщение *</label>
+        <label htmlFor="contact-message" className="block text-sm font-medium text-gray-700 mb-1">Съобщение *</label>
         <textarea
+          id="contact-message"
           required
           rows={5}
           value={formData.message}
@@ -96,7 +104,7 @@ export default function ContactForm() {
       </button>
 
       {status === "error" && (
-        <p className="text-red-600 text-sm text-center">Грешка при изпращане. Опитайте отново.</p>
+        <p className="text-red-600 text-sm text-center">{errorMessage}</p>
       )}
     </form>
   );

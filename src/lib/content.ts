@@ -6,6 +6,8 @@ export const defaultContent: Record<string, string> = {
   contact_phone: "+359 888 123 456",
   contact_email: "info@petralgroup.bg",
   contact_hours: "Понеделник - Петък: 09:00 - 18:00\nСъбота: 10:00 - 14:00\nНеделя: Затворено",
+  contact_lat: "",
+  contact_lon: "",
 
   // Hero секция
   hero_title: "Качествена техника за земеделие и отдих",

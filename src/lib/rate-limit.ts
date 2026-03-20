@@ -43,6 +43,9 @@ export function checkRateLimit(
   prefix: string,
   { maxRequests, windowMs }: RateLimitOptions
 ): NextResponse | null {
+  // Skip rate limiting for local development (loopback addresses)
+  if (ip === "unknown" || ip === "127.0.0.1" || ip === "::1") return null;
+
   cleanup(windowMs);
 
   const key = `${prefix}:${ip}`;

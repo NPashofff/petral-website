@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/ContactForm";
+import ProductMapLoader from "@/components/ProductMapLoader";
 import { getContentMap } from "@/lib/content";
 
 export const metadata: Metadata = {
@@ -13,6 +14,8 @@ export default async function ContactPage() {
     "contact_phone",
     "contact_email",
     "contact_hours",
+    "contact_lat",
+    "contact_lon",
   ]);
 
   const hoursLines = content.contact_hours.split("\n");
@@ -90,19 +93,12 @@ export default async function ContactPage() {
             </div>
           </div>
 
-          {/* Map placeholder */}
-          <div className="rounded-xl overflow-hidden h-64 bg-gray-200 flex items-center justify-center">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2932.5!2d23.3219!3d42.6977!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDLCsDQxJzUxLjciTiAyM8KwMTknMTguOCJF!5e0!3m2!1sbg!2sbg!4v1"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="PetralGroup локация"
-            />
-          </div>
+          {/* Map */}
+          <ProductMapLoader
+            address={content.contact_address}
+            lat={content.contact_lat ? parseFloat(content.contact_lat) : null}
+            lon={content.contact_lon ? parseFloat(content.contact_lon) : null}
+          />
         </div>
       </div>
     </div>

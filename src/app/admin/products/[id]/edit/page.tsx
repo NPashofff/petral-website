@@ -24,6 +24,9 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     engine: product.engine || "",
     weight: product.weight || "",
     images: product.images,
+    address: product.address || "",
+    lat: product.lat ?? null,
+    lon: product.lon ?? null,
     featured: product.featured,
   };
 

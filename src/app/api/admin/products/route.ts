@@ -4,9 +4,9 @@ import { prisma } from "@/lib/db";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, slug, description, price, category, brand, year, horsepower, engine, weight, images, featured } = body;
+    const { name, slug, description, price, category, brand, year, horsepower, engine, weight, images, address, lat, lon, featured } = body;
 
-    if (!name || !slug || !description || price == null || !category || !brand || !year) {
+    if (!name || !slug || !category || !brand || !year) {
       return NextResponse.json({ error: "Моля, попълнете всички задължителни полета." }, { status: 400 });
     }
 
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         name,
         slug,
         description,
-        price: parseFloat(price),
+        price: price != null ? parseFloat(price) : null,
         category,
         brand,
         year: parseInt(year),
@@ -30,6 +30,9 @@ export async function POST(request: Request) {
         engine: engine || null,
         weight: weight || null,
         images,
+        address: address || null,
+        lat: lat != null ? parseFloat(lat) : null,
+        lon: lon != null ? parseFloat(lon) : null,
         featured: !!featured,
       },
     });
