@@ -1,2 +1,51 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+/* Product description styles - override inline soland.bg styles */
+.product-description img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+/* Feature grids from soland.bg: make columns at least 200px wide */
+.product-description > div > div[style*="flex"] {
+  gap: 1.5rem;
+}
+
+.product-description > div > div[style*="flex"] > div[style*="width: 30%"],
+.product-description > div > div[style*="flex"] > div[style*="width:30%"] {
+  width: auto !important;
+  min-width: 200px;
+  flex: 1 1 30%;
+}
+
+.product-description > div > div[style*="flex"] > div[style*="width: 30%"] img,
+.product-description > div > div[style*="flex"] > div[style*="width:30%"] img {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Side-by-side text+image sections */
+.product-description div[style*="max-width: 50%"] img {
+  max-width: 100% !important;
+  border-radius: 0.5rem;
+}
+
+/* Float layout for data-layout attribute */
+.product-description img[data-layout="float-left"] {
+  float: left;
+  margin-right: 1rem;
+  margin-bottom: 0.5rem;
+  max-width: 50% !important;
+}
+.product-description img[data-layout="float-right"] {
+  float: right;
+  margin-left: 1rem;
+  margin-bottom: 0.5rem;
+  max-width: 50% !important;
+}
+.product-description img[data-layout="full-width"] {
+  width: 100% !important;
+}

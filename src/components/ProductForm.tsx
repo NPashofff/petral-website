@@ -233,6 +233,8 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
           >
             <option value="TRACTOR">Трактор</option>
             <option value="ATV">АТВ</option>
+            <option value="UTV">UTV</option>
+            <option value="EQUIPMENT">Прикачен инвентар</option>
           </select>
         </div>
         <div>

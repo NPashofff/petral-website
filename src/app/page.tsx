@@ -34,7 +34,7 @@ export default async function HomePage() {
               className="group relative rounded-2xl overflow-hidden h-64 bg-cover bg-center"
               style={{
                 backgroundImage:
-                  "url('/images/tractors/tractor-1.jpg')",
+                  "url('/images/products/traktor-tym-t6130-2.jpg')",
               }}
             >
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
@@ -48,12 +48,40 @@ export default async function HomePage() {
               className="group relative rounded-2xl overflow-hidden h-64 bg-cover bg-center"
               style={{
                 backgroundImage:
-                  "url('/images/atvs/atv-1.jpg')",
+                  "url('/images/products/atv-hisun-guardian-750-1.png')",
               }}
             >
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
               <div className="relative h-full flex flex-col items-center justify-center text-white">
                 <h3 className="text-3xl font-bold">АТВ-та</h3>
+                <p className="mt-2 text-gray-200">Разгледай всички модели</p>
+              </div>
+            </Link>
+            <Link
+              href="/catalog?category=UTV"
+              className="group relative rounded-2xl overflow-hidden h-64 bg-cover bg-center"
+              style={{
+                backgroundImage:
+                  "url('/images/products/utv-hisun-sector-550-1.png')",
+              }}
+            >
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
+              <div className="relative h-full flex flex-col items-center justify-center text-white">
+                <h3 className="text-3xl font-bold">UTV</h3>
+                <p className="mt-2 text-gray-200">Разгледай всички модели</p>
+              </div>
+            </Link>
+            <Link
+              href="/catalog?category=EQUIPMENT"
+              className="group relative rounded-2xl overflow-hidden h-64 bg-cover bg-center"
+              style={{
+                backgroundImage:
+                  "url('/images/products/traktor-tym-t3048-2.jpg')",
+              }}
+            >
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
+              <div className="relative h-full flex flex-col items-center justify-center text-white">
+                <h3 className="text-3xl font-bold">Прикачен инвентар</h3>
                 <p className="mt-2 text-gray-200">Разгледай всички модели</p>
               </div>
             </Link>

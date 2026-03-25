@@ -12,6 +12,7 @@ const adminLinks = [
   { href: "/admin/content", label: "Съдържание" },
   { href: "/admin/admins", label: "Админи" },
   { href: "/admin/settings", label: "Настройки" },
+  { href: "/admin/seed", label: "Посяване" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

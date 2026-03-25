@@ -50,6 +50,8 @@ export default function ProductFilter({ brands }: ProductFilterProps) {
             <option value="">Всички</option>
             <option value="TRACTOR">Трактори</option>
             <option value="ATV">АТВ-та</option>
+            <option value="UTV">UTV</option>
+            <option value="EQUIPMENT">Прикачен инвентар</option>
           </select>
         </div>
 
