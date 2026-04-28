@@ -4,6 +4,8 @@ import ProductCard from "@/components/ProductCard";
 import { prisma } from "@/lib/db";
 import { getContentMap } from "@/lib/content";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [featuredProducts, content] = await Promise.all([
     prisma.product.findMany({
@@ -53,7 +55,7 @@ export default async function HomePage() {
             >
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
               <div className="relative h-full flex flex-col items-center justify-center text-white">
-                <h3 className="text-3xl font-bold">АТВ-та</h3>
+                <h3 className="text-3xl font-bold">ATV</h3>
                 <p className="mt-2 text-gray-200">Разгледай всички модели</p>
               </div>
             </Link>
@@ -76,7 +78,7 @@ export default async function HomePage() {
               className="group relative rounded-2xl overflow-hidden h-64 bg-cover bg-center"
               style={{
                 backgroundImage:
-                  "url('/images/products/traktor-tym-t3048-2.jpg')",
+                  "url('/images/products/mateng-equipment-1.webp')",
               }}
             >
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors" />
@@ -117,7 +119,7 @@ export default async function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            Защо PetralGroup?
+            Защо Петрал Груп?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
             <div className="p-6">

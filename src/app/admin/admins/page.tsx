@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Toast from "@/components/Toast";
 
 interface Admin {
   id: number;
@@ -15,7 +16,8 @@ export default function AdminsPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const clearToast = useCallback(() => setToast(null), []);
   const [loading, setLoading] = useState(false);
 
   async function loadAdmins() {
@@ -30,7 +32,7 @@ export default function AdminsPage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    setToast(null);
     setLoading(true);
 
     try {
@@ -46,7 +48,7 @@ export default function AdminsPage() {
         return;
       }
 
-      setSuccess("Админът е създаден успешно");
+      setToast({ type: "success", text: "Админът е създаден успешно" });
       setUsername("");
       setPassword("");
       setName("");
@@ -82,10 +84,8 @@ export default function AdminsPage() {
             {error}
           </div>
         )}
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm mb-4">
-            {success}
-          </div>
+        {toast && (
+          <Toast message={toast.text} type={toast.type} onClose={clearToast} />
         )}
 
         <form onSubmit={handleCreate} className="flex flex-wrap gap-3 items-end">

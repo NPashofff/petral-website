@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { productId, name, email, phone, message } = body;
+    const { productId, name, email, phone, message, selectedColorName, selectedColorHex } = body;
 
     if (!productId || !name || !email || !message) {
       return NextResponse.json({ error: "Моля, попълнете всички задължителни полета." }, { status: 400 });
@@ -26,6 +26,8 @@ export async function POST(request: Request) {
         email,
         phone: phone || null,
         message,
+        selectedColorName: selectedColorName || null,
+        selectedColorHex: selectedColorHex || null,
       },
     });
 
@@ -38,7 +40,10 @@ export async function POST(request: Request) {
     // Send email notification (non-blocking)
     sendInquiryNotification(
       { name, email, phone, message },
-      product?.name || `Продукт #${productId}`
+      product?.name || `Продукт #${productId}`,
+      selectedColorName && selectedColorHex
+        ? { name: selectedColorName, hex: selectedColorHex }
+        : null
     ).catch((err) => {
       console.error("Failed to send inquiry notification email:", err);
     });

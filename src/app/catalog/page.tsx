@@ -6,8 +6,8 @@ import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
 export const metadata: Metadata = {
-  title: "Каталог - PetralGroup",
-  description: "Разгледайте нашия каталог с трактори и АТВ-та. Филтрирайте по категория, марка и цена.",
+  title: "Каталог - Петрал Груп",
+  description: "Разгледайте нашия каталог с трактори и ATV. Филтрирайте по категория, марка и цена.",
 };
 
 interface CatalogPageProps {

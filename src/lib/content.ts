@@ -1,23 +1,24 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { prisma } from "@/lib/db";
 
 export const defaultContent: Record<string, string> = {
   // Контакти
-  contact_address: "гр. София, бул. Цариградско шосе 100",
-  contact_phone: "+359 888 123 456",
-  contact_email: "info@petralgroup.bg",
-  contact_hours: "Понеделник - Петък: 09:00 - 18:00\nСъбота: 10:00 - 14:00\nНеделя: Затворено",
+  contact_address: "3400 Монтана, Сланището 555",
+  contact_phone: "+359 884 02 74 34",
+  contact_email: "petralgroup@abv.bg",
+  contact_hours: "Понеделник - Петък: 08:30 - 17:30",
   contact_lat: "",
   contact_lon: "",
 
   // Hero секция
   hero_title: "Качествена техника за земеделие и отдих",
   hero_subtitle:
-    "PetralGroup е вашият доверен партньор за продажба на трактори и АТВ-та. Предлагаме широка гама техника с гарантирано качество.",
+    "Петрал Груп е вашият доверен партньор за продажба на трактори и ATV. Предлагаме широка гама техника с гарантирано качество.",
 
   // За нас
-  about_title: "PetralGroup - Вашият доверен партньор",
+  about_title: "Петрал Груп - Вашият доверен партньор",
   about_text1:
-    "PetralGroup е водеща компания в продажбата на трактори и АТВ-та в България. С дългогодишен опит в бранша, ние предлагаме широка гама от качествена техника за земеделие и отдих.",
+    "Петрал Груп е водеща компания в продажбата на трактори и ATV в България. С дългогодишен опит в бранша, ние предлагаме широка гама от качествена техника за земеделие и отдих.",
   about_text2:
     "Нашата мисия е да предоставим на нашите клиенти най-доброто съотношение цена-качество, съчетано с професионално обслужване и поддръжка.",
   about_text3:
@@ -32,7 +33,7 @@ export const defaultContent: Record<string, string> = {
   about_value3_text:
     "Следим последните тенденции в техниката и постоянно обновяваме нашата гама с модерни модели.",
 
-  // Защо PetralGroup
+  // Защо Петрал Груп
   feature1_title: "Гарантирано качество",
   feature1_text: "Всички наши продукти са внимателно подбрани и проверени.",
   feature2_title: "Конкурентни цени",
@@ -43,7 +44,7 @@ export const defaultContent: Record<string, string> = {
 
   // Обща информация
   company_description:
-    "Вашият доверен партньор за трактори и АТВ-та. Качествена техника за земеделие и отдих.",
+    "Вашият доверен партньор за трактори и ATV. Качествена техника за земеделие и отдих.",
 
   // Цветове
   color_primary: "#1B5E20",
@@ -52,6 +53,7 @@ export const defaultContent: Record<string, string> = {
 };
 
 export async function getContentMap(keys: string[]): Promise<Record<string, string>> {
+  noStore();
   const rows = await prisma.siteContent.findMany({
     where: { key: { in: keys } },
   });
@@ -65,6 +67,7 @@ export async function getContentMap(keys: string[]): Promise<Record<string, stri
 }
 
 export async function getAllContent(): Promise<Record<string, string>> {
+  noStore();
   const rows = await prisma.siteContent.findMany();
   const map: Record<string, string> = { ...defaultContent };
   for (const row of rows) {

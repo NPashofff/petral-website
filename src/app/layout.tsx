@@ -8,8 +8,8 @@ import { getContentMap } from "@/lib/content";
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
-  title: "PetralGroup",
-  description: "PetralGroup - Вашият доверен партньор за продажба на трактори и АТВ-та. Качествена техника за земеделие и отдих.",
+  title: "Петрал Груп",
+  description: "Петрал Груп - Вашият доверен партньор за продажба на трактори и ATV. Качествена техника за земеделие и отдих.",
   icons: {
     icon: "/icon.svg",
   },

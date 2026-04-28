@@ -17,7 +17,7 @@ export default async function Footer() {
           {/* Company info */}
           <div>
             <h3 className="text-white text-xl font-bold mb-4">
-              Petral<span className="text-green-400">Group</span>
+              Петрал <span className="text-green-400">Груп</span>
             </h3>
             <p className="text-sm leading-relaxed">
               {content.company_description}
@@ -30,7 +30,9 @@ export default async function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/catalog" className="hover:text-white transition-colors">Каталог</Link></li>
               <li><Link href="/catalog?category=TRACTOR" className="hover:text-white transition-colors">Трактори</Link></li>
-              <li><Link href="/catalog?category=ATV" className="hover:text-white transition-colors">АТВ-та</Link></li>
+              <li><Link href="/catalog?category=ATV" className="hover:text-white transition-colors">ATV</Link></li>
+              <li><Link href="/catalog?category=UTV" className="hover:text-white transition-colors">UTV</Link></li>
+              <li><Link href="/catalog?category=EQUIPMENT" className="hover:text-white transition-colors">Прикачен инвентар</Link></li>
               <li><Link href="/about" className="hover:text-white transition-colors">За нас</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors">Контакти</Link></li>
             </ul>
@@ -49,7 +51,7 @@ export default async function Footer() {
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} PetralGroup. Всички права запазени.</p>
+          <p>&copy; {new Date().getFullYear()} Петрал Груп. Всички права запазени.</p>
         </div>
       </div>
     </footer>

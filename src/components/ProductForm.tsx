@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
+import Toast from "@/components/Toast";
 
 const RichTextEditor = dynamic(() => import("./RichTextEditor"), { ssr: false });
 
@@ -22,11 +23,19 @@ interface ProductFormData {
   lat: number | null;
   lon: number | null;
   featured: boolean;
+  colorIds: number[];
 }
 
 interface ProductFormProps {
   initialData?: ProductFormData;
   productId?: number;
+}
+
+interface ColorOption {
+  id: number;
+  name: string;
+  hex: string;
+  order: number;
 }
 
 const defaultData: ProductFormData = {
@@ -45,17 +54,43 @@ const defaultData: ProductFormData = {
   lat: null,
   lon: null,
   featured: false,
+  colorIds: [],
 };
 
 export default function ProductForm({ initialData, productId }: ProductFormProps) {
   const router = useRouter();
-  const [form, setForm] = useState<ProductFormData>(initialData || defaultData);
+  const [form, setForm] = useState<ProductFormData>(() => ({
+    ...defaultData,
+    ...(initialData || {}),
+    colorIds: initialData?.colorIds ?? [],
+  }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const clearToast = useCallback(() => setToast(null), []);
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [availableColors, setAvailableColors] = useState<ColorOption[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/colors")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setAvailableColors(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleColor = (id: number) => {
+    setForm((prev) => ({
+      ...prev,
+      colorIds: prev.colorIds.includes(id)
+        ? prev.colorIds.filter((x) => x !== id)
+        : [...prev.colorIds, id],
+    }));
+  };
 
   const isEdit = !!productId;
 
@@ -154,20 +189,27 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
       });
 
       if (res.ok) {
-        router.push("/admin/products");
-        router.refresh();
+        setToast({ type: "success", text: isEdit ? "Продуктът е обновен успешно!" : "Продуктът е създаден успешно!" });
+        setTimeout(() => {
+          router.push("/admin/products");
+          router.refresh();
+        }, 1500);
       } else {
         const data = await res.json();
         setError(data.error || "Грешка при запазване.");
+        setToast({ type: "error", text: data.error || "Грешка при запазване" });
       }
     } catch {
       setError("Грешка при запазване.");
+      setToast({ type: "error", text: "Грешка при запазване" });
     } finally {
       setSaving(false);
     }
   };
 
   return (
+    <>
+    {toast && <Toast message={toast.text} type={toast.type} onClose={clearToast} />}
     <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md p-6 space-y-5 max-w-3xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
@@ -373,6 +415,50 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
         )}
       </div>
 
+      {/* Colors */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Налични цветове
+        </label>
+        {availableColors.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            Няма добавени цветове. Добавете в{" "}
+            <a href="/admin/colors" className="text-green-700 underline">
+              Цветове
+            </a>
+            .
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {availableColors.map((color) => {
+              const checked = form.colorIds.includes(color.id);
+              return (
+                <label
+                  key={color.id}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer text-sm transition-colors ${
+                    checked
+                      ? "border-green-600 bg-green-50"
+                      : "border-gray-300 hover:border-gray-400"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleColor(color.id)}
+                    className="sr-only"
+                  />
+                  <span
+                    className="inline-block w-4 h-4 rounded-full border border-gray-300"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                  <span>{color.name}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center gap-2">
         <input
           type="checkbox"
@@ -405,5 +491,6 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
         </button>
       </div>
     </form>
+    </>
   );
 }

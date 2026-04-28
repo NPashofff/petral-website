@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!product) return { title: "Продуктът не е намерен" };
 
   return {
-    title: `${product.name} - PetralGroup`,
+    title: `${product.name} - Петрал Груп`,
     description: product.description.replace(/<[^>]*>/g, '').slice(0, 160),
   };
 }
@@ -25,6 +25,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
   const product = await prisma.product.findUnique({
     where: { id: parseInt(id) },
+    include: {
+      colors: {
+        orderBy: [{ order: "asc" }, { name: "asc" }],
+        select: { id: true, name: true, hex: true },
+      },
+    },
   });
 
   if (!product) notFound();
@@ -81,7 +87,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           <h1 className="text-3xl font-bold text-gray-900 mt-4">{product.name}</h1>
           <p className="text-3xl font-bold text-[var(--color-primary)] mt-4">
-            {product.price != null ? `${product.price.toLocaleString("bg-BG")} лв.` : "При запитване"}
+            {product.price != null ? `${product.price.toLocaleString("bg-BG")} лв.` : "Цена при запитване"}
           </p>
 
           {/* Specs table */}
@@ -104,10 +110,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
           </div>
 
-          {/* Inquiry form */}
-          <div className="mt-8">
-            <InquiryForm productId={product.id} productName={product.name} />
-          </div>
         </div>
       </div>
 
@@ -127,6 +129,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <ProductMapLoader address={product.address} lat={product.lat} lon={product.lon} />
         </div>
       )}
+
+      {/* Inquiry form - at the bottom */}
+      <div className="mt-12">
+        <InquiryForm productId={product.id} productName={product.name} colors={product.colors} />
+      </div>
     </div>
   );
 }

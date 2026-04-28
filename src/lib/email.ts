@@ -57,13 +57,25 @@ export async function sendContactNotification(contact: ContactData) {
 
 export async function sendInquiryNotification(
   inquiry: ContactData,
-  productName: string
+  productName: string,
+  selectedColor?: { name: string; hex: string } | null
 ) {
   const resend = getResend();
   if (!resend) {
     console.warn("RESEND_API_KEY not set, skipping email notification");
     return;
   }
+
+  const colorRow = selectedColor
+    ? `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Избран цвят</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">
+            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: ${escapeHtml(selectedColor.hex)}; border: 1px solid #ccc; vertical-align: middle; margin-right: 6px;"></span>
+            ${escapeHtml(selectedColor.name)}
+          </td>
+        </tr>`
+    : "";
 
   await resend.emails.send({
     from: FROM_EMAIL,
@@ -84,7 +96,7 @@ export async function sendInquiryNotification(
         <tr>
           <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Телефон</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${inquiry.phone ? escapeHtml(inquiry.phone) : "—"}</td>
-        </tr>
+        </tr>${colorRow}
         <tr>
           <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Съобщение</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(inquiry.message)}</td>

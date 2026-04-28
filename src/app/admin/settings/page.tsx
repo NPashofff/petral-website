@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Toast from "@/components/Toast";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -9,13 +10,14 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const clearToast = useCallback(() => setToast(null), []);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    setToast(null);
 
     if (newPassword !== confirmPassword) {
       setError("Новата парола и потвърждението не съвпадат");
@@ -37,7 +39,7 @@ export default function SettingsPage() {
         return;
       }
 
-      setSuccess("Паролата е сменена успешно. Ще бъдете пренасочени към входа.");
+      setToast({ type: "success", text: "Паролата е сменена успешно. Ще бъдете пренасочени към входа." });
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -66,10 +68,8 @@ export default function SettingsPage() {
             {error}
           </div>
         )}
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded text-sm mb-4">
-            {success}
-          </div>
+        {toast && (
+          <Toast message={toast.text} type={toast.type} onClose={clearToast} />
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">

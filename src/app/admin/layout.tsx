@@ -7,12 +7,13 @@ import { useState } from "react";
 const adminLinks = [
   { href: "/admin", label: "Табло" },
   { href: "/admin/products", label: "Продукти" },
+  { href: "/admin/colors", label: "Цветове" },
   { href: "/admin/inquiries", label: "Запитвания" },
   { href: "/admin/contacts", label: "Съобщения" },
   { href: "/admin/content", label: "Съдържание" },
   { href: "/admin/admins", label: "Админи" },
   { href: "/admin/settings", label: "Настройки" },
-  { href: "/admin/seed", label: "Посяване" },
+  { href: "/admin/backup", label: "Бекъп" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

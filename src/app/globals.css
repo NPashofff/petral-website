@@ -49,3 +49,10 @@
 .product-description img[data-layout="full-width"] {
   width: 100% !important;
 }
+
+/* Borderless tables */
+.product-description table.borderless td,
+.product-description table.borderless th {
+  border-color: transparent !important;
+  background: transparent !important;
+}

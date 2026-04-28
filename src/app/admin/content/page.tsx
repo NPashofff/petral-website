@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
+import Toast from "@/components/Toast";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker"), { ssr: false });
 
@@ -45,7 +46,7 @@ const sections: Section[] = [
     ],
   },
   {
-    title: "Защо PetralGroup",
+    title: "Защо Петрал Груп",
     fields: [
       { key: "feature1_title", label: "Предимство 1 - заглавие", type: "input" },
       { key: "feature1_text", label: "Предимство 1 - текст", type: "textarea" },
@@ -75,7 +76,8 @@ export default function AdminContentPage() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const clearToast = useCallback(() => setToast(null), []);
 
   useEffect(() => {
     fetch("/api/admin/content")
@@ -89,7 +91,7 @@ export default function AdminContentPage() {
 
   async function saveSection(section: Section) {
     setSaving(section.title);
-    setMessage(null);
+    setToast(null);
 
     const body: Record<string, string> = {};
     for (const field of section.fields) {
@@ -104,9 +106,9 @@ export default function AdminContentPage() {
       });
 
       if (!res.ok) throw new Error();
-      setMessage({ type: "success", text: `"${section.title}" е запазена успешно.` });
+      setToast({ type: "success", text: `"${section.title}" е запазена успешно.` });
     } catch {
-      setMessage({ type: "error", text: "Грешка при запазване." });
+      setToast({ type: "error", text: "Грешка при запазване." });
     } finally {
       setSaving(null);
     }
@@ -120,16 +122,8 @@ export default function AdminContentPage() {
     <>
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Съдържание на сайта</h1>
 
-      {message && (
-        <div
-          className={`mb-6 p-4 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-green-50 text-green-800 border border-green-200"
-              : "bg-red-50 text-red-800 border border-red-200"
-          }`}
-        >
-          {message.text}
-        </div>
+      {toast && (
+        <Toast message={toast.text} type={toast.type} onClose={clearToast} />
       )}
 
       <div className="space-y-8">

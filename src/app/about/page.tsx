@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { getContentMap } from "@/lib/content";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
-  title: "За нас - PetralGroup",
-  description: "Научете повече за PetralGroup - вашият доверен партньор за продажба на трактори и АТВ-та.",
+  title: "За нас - Петрал Груп",
+  description: "Научете повече за Петрал Груп - вашият доверен партньор за продажба на трактори и ATV.",
 };
 
 export default async function AboutPage() {

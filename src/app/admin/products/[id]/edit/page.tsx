@@ -8,7 +8,10 @@ interface EditProductPageProps {
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const { id } = await params;
-  const product = await prisma.product.findUnique({ where: { id: parseInt(id) } });
+  const product = await prisma.product.findUnique({
+    where: { id: parseInt(id) },
+    include: { colors: { select: { id: true } } },
+  });
 
   if (!product) notFound();
 
@@ -28,6 +31,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     lat: product.lat ?? null,
     lon: product.lon ?? null,
     featured: product.featured,
+    colorIds: product.colors.map((c) => c.id),
   };
 
   return (

@@ -3,9 +3,11 @@ import ContactForm from "@/components/ContactForm";
 import ProductMapLoader from "@/components/ProductMapLoader";
 import { getContentMap } from "@/lib/content";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
-  title: "Контакти - PetralGroup",
-  description: "Свържете се с PetralGroup. Телефон, имейл и адрес за контакт.",
+  title: "Контакти - Петрал Груп",
+  description: "Свържете се с Петрал Груп. Телефон, имейл и адрес за контакт.",
 };
 
 export default async function ContactPage() {

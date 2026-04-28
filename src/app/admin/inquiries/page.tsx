@@ -21,9 +21,20 @@ export default async function AdminInquiriesPage() {
                 <p className="text-sm text-gray-500">{inq.email} {inq.phone && `| ${inq.phone}`}</p>
               </div>
               <div className="text-right">
-                <span className="text-sm font-medium text-green-700 bg-green-50 px-3 py-1 rounded-full">
-                  {inq.product.name}
-                </span>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <span className="text-sm font-medium text-green-700 bg-green-50 px-3 py-1 rounded-full">
+                    {inq.product.name}
+                  </span>
+                  {inq.selectedColorName && (
+                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 px-3 py-1 rounded-full">
+                      <span
+                        className="inline-block w-3.5 h-3.5 rounded-full border border-gray-300"
+                        style={{ backgroundColor: inq.selectedColorHex || "#ccc" }}
+                      />
+                      {inq.selectedColorName}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-400 mt-1">
                   {new Date(inq.createdAt).toLocaleString("bg-BG")}
                 </p>
