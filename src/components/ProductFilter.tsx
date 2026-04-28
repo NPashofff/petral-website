@@ -2,12 +2,15 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import { CATEGORIES, CATEGORY_KEYS, VISCOSITY_OTHER } from "@/lib/categories";
 
 interface ProductFilterProps {
   brands: string[];
+  viscosities?: string[];
+  packageSizes?: string[];
 }
 
-export default function ProductFilter({ brands }: ProductFilterProps) {
+export default function ProductFilter({ brands, viscosities = [], packageSizes = [] }: ProductFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -15,6 +18,10 @@ export default function ProductFilter({ brands }: ProductFilterProps) {
   const currentBrand = searchParams.get("brand") || "";
   const currentMinPrice = searchParams.get("minPrice") || "";
   const currentMaxPrice = searchParams.get("maxPrice") || "";
+  const currentViscosity = searchParams.get("viscosity") || "";
+  const currentPackage = searchParams.get("package") || "";
+
+  const isOils = currentCategory === "OILS";
 
   const updateFilters = useCallback(
     (key: string, value: string) => {
@@ -23,6 +30,10 @@ export default function ProductFilter({ brands }: ProductFilterProps) {
         params.set(key, value);
       } else {
         params.delete(key);
+      }
+      if (key === "category") {
+        params.delete("viscosity");
+        params.delete("package");
       }
       router.push(`/catalog?${params.toString()}`);
     },
@@ -33,7 +44,8 @@ export default function ProductFilter({ brands }: ProductFilterProps) {
     router.push("/catalog");
   };
 
-  const hasFilters = currentCategory || currentBrand || currentMinPrice || currentMaxPrice;
+  const hasFilters =
+    currentCategory || currentBrand || currentMinPrice || currentMaxPrice || currentViscosity || currentPackage;
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 mb-8">
@@ -48,10 +60,9 @@ export default function ProductFilter({ brands }: ProductFilterProps) {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
             <option value="">Всички</option>
-            <option value="TRACTOR">Трактори</option>
-            <option value="ATV">ATV</option>
-            <option value="UTV">UTV</option>
-            <option value="EQUIPMENT">Прикачен инвентар</option>
+            {CATEGORY_KEYS.map((key) => (
+              <option key={key} value={key}>{CATEGORIES[key].label}</option>
+            ))}
           </select>
         </div>
 
@@ -73,31 +84,72 @@ export default function ProductFilter({ brands }: ProductFilterProps) {
           </select>
         </div>
 
-        <div className="flex-1 min-w-[120px]">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Мин. цена
-          </label>
-          <input
-            type="number"
-            value={currentMinPrice}
-            onChange={(e) => updateFilters("minPrice", e.target.value)}
-            placeholder="0"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
+        {isOils && (
+          <>
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Вискозитет
+              </label>
+              <select
+                value={currentViscosity}
+                onChange={(e) => updateFilters("viscosity", e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">Всички</option>
+                {viscosities.map((v) => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+                <option value={VISCOSITY_OTHER}>Други</option>
+              </select>
+            </div>
 
-        <div className="flex-1 min-w-[120px]">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Макс. цена
-          </label>
-          <input
-            type="number"
-            value={currentMaxPrice}
-            onChange={(e) => updateFilters("maxPrice", e.target.value)}
-            placeholder="100000"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
+            <div className="flex-1 min-w-[150px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Опаковка
+              </label>
+              <select
+                value={currentPackage}
+                onChange={(e) => updateFilters("package", e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">Всички</option>
+                {packageSizes.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
+
+        {!isOils && (
+          <>
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Мин. цена
+              </label>
+              <input
+                type="number"
+                value={currentMinPrice}
+                onChange={(e) => updateFilters("minPrice", e.target.value)}
+                placeholder="0"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Макс. цена
+              </label>
+              <input
+                type="number"
+                value={currentMaxPrice}
+                onChange={(e) => updateFilters("maxPrice", e.target.value)}
+                placeholder="100000"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+          </>
+        )}
 
         {hasFilters && (
           <button

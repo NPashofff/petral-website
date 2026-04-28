@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 
 interface ProductCardProps {
   id: number;
@@ -8,8 +9,11 @@ interface ProductCardProps {
   price: number | null;
   category: string;
   brand: string;
-  year: number;
+  year: number | null;
   images: string;
+  viscosity?: string | null;
+  volumeValue?: number | null;
+  volumeUnit?: string | null;
 }
 
 export default function ProductCard({
@@ -20,9 +24,21 @@ export default function ProductCard({
   brand,
   year,
   images,
+  viscosity,
+  volumeValue,
+  volumeUnit,
 }: ProductCardProps) {
   const imageList: string[] = JSON.parse(images);
   const firstImage = imageList[0] || "/images/placeholder.jpg";
+  const isOil = category === "OILS";
+
+  const priceLabel = (() => {
+    if (price == null) return "-";
+    if (isOil && volumeUnit) {
+      return `${price.toLocaleString("bg-BG")} лв/${volumeUnit}`;
+    }
+    return `${price.toLocaleString("bg-BG")} лв.`;
+  })();
 
   return (
     <Link href={`/catalog/${id}`} className="group block">
@@ -38,24 +54,23 @@ export default function ProductCard({
         </div>
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <span
-              className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                category === "TRACTOR"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-orange-100 text-orange-800"
-              }`}
-            >
-              {category === "TRACTOR" ? "Трактор" : "АТВ"}
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${categoryBadgeClass(category)}`}>
+              {categoryLabel(category)}
             </span>
-            <span className="text-xs text-gray-500">{year}</span>
+            {isOil ? (
+              <span className="text-xs text-gray-500">
+                {viscosity || "Други"}
+                {volumeValue != null && volumeUnit ? ` • ${volumeValue}${volumeUnit}` : ""}
+              </span>
+            ) : (
+              year != null && <span className="text-xs text-gray-500">{year}</span>
+            )}
           </div>
           <h3 className="font-semibold text-gray-900 text-lg group-hover:text-[var(--color-primary)] transition-colors">
             {name}
           </h3>
           <p className="text-sm text-gray-500 mt-1">{brand}</p>
-          <p className="text-xl font-bold text-[var(--color-primary)] mt-2">
-            {price != null ? `${price.toLocaleString("bg-BG")} лв.` : "-"}
-          </p>
+          <p className="text-xl font-bold text-[var(--color-primary)] mt-2">{priceLabel}</p>
         </div>
       </div>
     </Link>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Toast from "@/components/Toast";
+import { CATEGORIES, CATEGORY_KEYS } from "@/lib/categories";
 
 const RichTextEditor = dynamic(() => import("./RichTextEditor"), { ssr: false });
 
@@ -14,10 +15,13 @@ interface ProductFormData {
   price: number | null;
   category: string;
   brand: string;
-  year: number;
+  year: number | null;
   horsepower: string;
   engine: string;
   weight: string;
+  viscosity: string;
+  volumeValue: number | null;
+  volumeUnit: "L" | "kg" | "";
   images: string;
   address: string;
   lat: number | null;
@@ -49,6 +53,9 @@ const defaultData: ProductFormData = {
   horsepower: "",
   engine: "",
   weight: "",
+  viscosity: "",
+  volumeValue: null,
+  volumeUnit: "",
   images: "[]",
   address: "",
   lat: null,
@@ -273,10 +280,9 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
             onChange={(e) => setForm({ ...form, category: e.target.value })}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
-            <option value="TRACTOR">Трактор</option>
-            <option value="ATV">АТВ</option>
-            <option value="UTV">UTV</option>
-            <option value="EQUIPMENT">Прикачен инвентар</option>
+            {CATEGORY_KEYS.map((key) => (
+              <option key={key} value={key}>{CATEGORIES[key].label}</option>
+            ))}
           </select>
         </div>
         <div>
@@ -291,48 +297,93 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Година *</label>
-          <input
-            type="number"
-            required
-            value={form.year}
-            onChange={(e) => setForm({ ...form, year: parseInt(e.target.value) || 0 })}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
+      {CATEGORIES[form.category as keyof typeof CATEGORIES]?.fields.oil ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Вискозитет</label>
+            <input
+              type="text"
+              value={form.viscosity}
+              onChange={(e) => setForm({ ...form, viscosity: e.target.value })}
+              placeholder="напр. 10W40 или ISO VG 68"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 mt-1">Празно = &quot;Други&quot;</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Опаковка (количество)</label>
+            <input
+              type="number"
+              step="0.01"
+              min={0}
+              value={form.volumeValue ?? ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setForm({ ...form, volumeValue: val === "" ? null : parseFloat(val) });
+              }}
+              placeholder="напр. 209"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Мерна единица</label>
+            <select
+              value={form.volumeUnit}
+              onChange={(e) => setForm({ ...form, volumeUnit: e.target.value as "L" | "kg" | "" })}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="">—</option>
+              <option value="L">литри (L)</option>
+              <option value="kg">килограми (kg)</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Мощност</label>
-          <input
-            type="text"
-            value={form.horsepower}
-            onChange={(e) => setForm({ ...form, horsepower: e.target.value })}
-            placeholder="120 к.с."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Година</label>
+            <input
+              type="number"
+              value={form.year ?? ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setForm({ ...form, year: val === "" ? null : parseInt(val) || null });
+              }}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Мощност</label>
+            <input
+              type="text"
+              value={form.horsepower}
+              onChange={(e) => setForm({ ...form, horsepower: e.target.value })}
+              placeholder="120 к.с."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Двигател</label>
+            <input
+              type="text"
+              value={form.engine}
+              onChange={(e) => setForm({ ...form, engine: e.target.value })}
+              placeholder="4.5L дизел"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Тегло</label>
+            <input
+              type="text"
+              value={form.weight}
+              onChange={(e) => setForm({ ...form, weight: e.target.value })}
+              placeholder="5200 кг"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Двигател</label>
-          <input
-            type="text"
-            value={form.engine}
-            onChange={(e) => setForm({ ...form, engine: e.target.value })}
-            placeholder="4.5L дизел"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Тегло</label>
-          <input
-            type="text"
-            value={form.weight}
-            onChange={(e) => setForm({ ...form, weight: e.target.value })}
-            placeholder="5200 кг"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-      </div>
+      )}
 
       {/* Image Manager */}
       <div>

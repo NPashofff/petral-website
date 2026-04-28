@@ -5,6 +5,7 @@ import ImageGallery from "@/components/ImageGallery";
 import InquiryForm from "@/components/InquiryForm";
 import ProductMapLoader from "@/components/ProductMapLoader";
 import type { Metadata } from "next";
+import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -37,27 +38,29 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const images: string[] = JSON.parse(product.images);
 
-  const categoryLabels: Record<string, string> = {
-    TRACTOR: "Трактор",
-    ATV: "АТВ",
-    UTV: "UTV",
-    EQUIPMENT: "Прикачен инвентар",
-  };
-  const categoryColors: Record<string, string> = {
-    TRACTOR: "bg-green-100 text-green-800",
-    ATV: "bg-orange-100 text-orange-800",
-    UTV: "bg-purple-100 text-purple-800",
-    EQUIPMENT: "bg-yellow-100 text-yellow-800",
-  };
+  const isOil = product.category === "OILS";
+  const totalPrice =
+    isOil && product.price != null && product.volumeValue != null
+      ? product.price * product.volumeValue
+      : null;
 
-  const specs = [
-    { label: "Марка", value: product.brand },
-    { label: "Година", value: product.year.toString() },
-    { label: "Категория", value: categoryLabels[product.category] || product.category },
-    ...(product.horsepower ? [{ label: "Мощност", value: product.horsepower }] : []),
-    ...(product.engine ? [{ label: "Двигател", value: product.engine }] : []),
-    ...(product.weight ? [{ label: "Тегло", value: product.weight }] : []),
-  ];
+  const specs = isOil
+    ? [
+        { label: "Марка", value: product.brand },
+        { label: "Категория", value: categoryLabel(product.category) },
+        { label: "Вискозитет", value: product.viscosity || "Други" },
+        ...(product.volumeValue != null && product.volumeUnit
+          ? [{ label: "Опаковка", value: `${product.volumeValue} ${product.volumeUnit}` }]
+          : []),
+      ]
+    : [
+        { label: "Марка", value: product.brand },
+        ...(product.year != null ? [{ label: "Година", value: product.year.toString() }] : []),
+        { label: "Категория", value: categoryLabel(product.category) },
+        ...(product.horsepower ? [{ label: "Мощност", value: product.horsepower }] : []),
+        ...(product.engine ? [{ label: "Двигател", value: product.engine }] : []),
+        ...(product.weight ? [{ label: "Тегло", value: product.weight }] : []),
+      ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -77,18 +80,30 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
         {/* Right: Key info */}
         <div>
-          <span
-            className={`text-sm font-semibold px-3 py-1 rounded-full ${
-              categoryColors[product.category] || "bg-gray-100 text-gray-800"
-            }`}
-          >
-            {categoryLabels[product.category] || product.category}
+          <span className={`text-sm font-semibold px-3 py-1 rounded-full ${categoryBadgeClass(product.category)}`}>
+            {categoryLabel(product.category)}
           </span>
 
           <h1 className="text-3xl font-bold text-gray-900 mt-4">{product.name}</h1>
-          <p className="text-3xl font-bold text-[var(--color-primary)] mt-4">
-            {product.price != null ? `${product.price.toLocaleString("bg-BG")} лв.` : "Цена при запитване"}
-          </p>
+          {isOil ? (
+            <div className="mt-4">
+              <p className="text-3xl font-bold text-[var(--color-primary)]">
+                {product.price != null
+                  ? `${product.price.toLocaleString("bg-BG")} лв/${product.volumeUnit ?? ""}`
+                  : "Цена при запитване"}
+              </p>
+              {totalPrice != null && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Обща цена за опаковка ({product.volumeValue}{product.volumeUnit}):{" "}
+                  <strong>{totalPrice.toLocaleString("bg-BG", { maximumFractionDigits: 2 })} лв.</strong>
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-3xl font-bold text-[var(--color-primary)] mt-4">
+              {product.price != null ? `${product.price.toLocaleString("bg-BG")} лв.` : "Цена при запитване"}
+            </p>
+          )}
 
           {/* Specs table */}
           <div className="mt-8">

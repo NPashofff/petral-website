@@ -13,12 +13,15 @@ model Product {
   slug        String    @unique
   description String
   price       Float?
-  category    String    // TRACTOR or ATV
+  category    String    // TRACTOR, ATV, UTV, EQUIPMENT, OILS
   brand       String
-  year        Int
+  year        Int?
   horsepower  String?
   engine      String?
   weight      String?
+  viscosity   String?
+  volumeValue Float?
+  volumeUnit  String?
   images      String    // JSON array stored as string
   address     String?
   lat         Float?

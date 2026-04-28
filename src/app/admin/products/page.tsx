@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import DeleteProductButton from "./DeleteProductButton";
+import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 
 export const dynamic = "force-dynamic";
 
@@ -11,12 +12,20 @@ export default async function AdminProductsPage() {
     <>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Продукти</h1>
-        <Link
-          href="/admin/products/new"
-          className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
-        >
-          + Добави продукт
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/products/import"
+            className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            Импорт от Excel
+          </Link>
+          <Link
+            href="/admin/products/new"
+            className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            + Добави продукт
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -33,31 +42,37 @@ export default async function AdminProductsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {products.map((product) => (
-              <tr key={product.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-gray-500">{product.id}</td>
-                <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                    product.category === "TRACTOR" ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"
-                  }`}>
-                    {product.category === "TRACTOR" ? "Трактор" : "АТВ"}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-gray-600">{product.brand}</td>
-                <td className="px-4 py-3 text-right font-medium">{product.price != null ? `${product.price.toLocaleString("bg-BG")} лв.` : "-"}</td>
-                <td className="px-4 py-3 text-center">{product.featured ? "✓" : ""}</td>
-                <td className="px-4 py-3 text-right space-x-2">
-                  <Link
-                    href={`/admin/products/${product.id}/edit`}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Редактирай
-                  </Link>
-                  <DeleteProductButton productId={product.id} productName={product.name} />
-                </td>
-              </tr>
-            ))}
+            {products.map((product) => {
+              const isOil = product.category === "OILS";
+              const priceText = product.price != null
+                ? isOil && product.volumeUnit
+                  ? `${product.price.toLocaleString("bg-BG")} лв/${product.volumeUnit}`
+                  : `${product.price.toLocaleString("bg-BG")} лв.`
+                : "-";
+              return (
+                <tr key={product.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-500">{product.id}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${categoryBadgeClass(product.category)}`}>
+                      {categoryLabel(product.category)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{product.brand}</td>
+                  <td className="px-4 py-3 text-right font-medium">{priceText}</td>
+                  <td className="px-4 py-3 text-center">{product.featured ? "✓" : ""}</td>
+                  <td className="px-4 py-3 text-right space-x-2">
+                    <Link
+                      href={`/admin/products/${product.id}/edit`}
+                      className="text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Редактирай
+                    </Link>
+                    <DeleteProductButton productId={product.id} productName={product.name} />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {products.length === 0 && (

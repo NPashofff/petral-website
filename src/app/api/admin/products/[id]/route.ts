@@ -9,9 +9,13 @@ export async function PUT(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
     const body = await request.json();
-    const { name, slug, description, price, category, brand, year, horsepower, engine, weight, images, address, lat, lon, featured, colorIds } = body;
+    const {
+      name, slug, description, price, category, brand, year,
+      horsepower, engine, weight, viscosity, volumeValue, volumeUnit,
+      images, address, lat, lon, featured, colorIds,
+    } = body;
 
-    if (!name || !slug || !category || !brand || !year) {
+    if (!name || !slug || !category || !brand) {
       return NextResponse.json({ error: "Моля, попълнете всички задължителни полета." }, { status: 400 });
     }
 
@@ -31,13 +35,16 @@ export async function PUT(request: Request, context: RouteContext) {
         name,
         slug,
         description,
-        price: price != null ? parseFloat(price) : null,
+        price: price != null && price !== "" ? parseFloat(price) : null,
         category,
         brand,
-        year: parseInt(year),
+        year: year != null && year !== "" ? parseInt(year) : null,
         horsepower: horsepower || null,
         engine: engine || null,
         weight: weight || null,
+        viscosity: viscosity || null,
+        volumeValue: volumeValue != null && volumeValue !== "" ? parseFloat(volumeValue) : null,
+        volumeUnit: volumeUnit || null,
         images,
         address: address || null,
         lat: lat != null ? parseFloat(lat) : null,
