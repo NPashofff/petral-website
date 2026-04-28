@@ -6,6 +6,7 @@ import InquiryForm from "@/components/InquiryForm";
 import ProductMapLoader from "@/components/ProductMapLoader";
 import type { Metadata } from "next";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
+import { getBrandLogoUrl } from "@/lib/brand-logo";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -36,7 +37,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   if (!product) notFound();
 
-  const images: string[] = JSON.parse(product.images);
+  const rawImages: string[] = JSON.parse(product.images);
+  const images: string[] = rawImages.length > 0
+    ? rawImages
+    : product.category === "OILS"
+      ? [getBrandLogoUrl(product.brand) ?? "/images/placeholder.jpg"]
+      : [];
 
   const isOil = product.category === "OILS";
   const totalPrice =

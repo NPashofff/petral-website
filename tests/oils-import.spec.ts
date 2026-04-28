@@ -54,10 +54,10 @@ test.describe("Oils Excel import", () => {
     expect(updated2).toBeGreaterThan(0);
   });
 
-  test("imported oils show on /catalog?category=OILS with viscosity filter", async ({ page }) => {
-    await page.goto("/catalog?category=OILS");
+  test("imported oils show on /oils with viscosity filter", async ({ page }) => {
+    await page.goto("/oils");
 
-    await expect(page.getByRole("heading", { name: "Каталог" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Масла" })).toBeVisible();
     await expect(page.locator('select').filter({ hasText: /Всички/ }).first()).toBeVisible();
 
     const viscositySelect = page.locator('label:has-text("Вискозитет") + select');
@@ -68,7 +68,7 @@ test.describe("Oils Excel import", () => {
   });
 
   test("oil detail page shows per-unit and total price", async ({ page }) => {
-    await page.goto("/catalog?category=OILS&viscosity=15W40");
+    await page.goto("/oils?viscosity=15W40");
     const firstCard = page.locator("a[href^='/catalog/']").first();
     await firstCard.click();
     await expect(page.locator("text=/лв\\/(L|kg)/").first()).toBeVisible();

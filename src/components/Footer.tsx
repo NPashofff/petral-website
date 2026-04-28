@@ -33,7 +33,7 @@ export default async function Footer() {
               <li><Link href="/catalog?category=ATV" className="hover:text-white transition-colors">ATV</Link></li>
               <li><Link href="/catalog?category=UTV" className="hover:text-white transition-colors">UTV</Link></li>
               <li><Link href="/catalog?category=EQUIPMENT" className="hover:text-white transition-colors">Прикачен инвентар</Link></li>
-              <li><Link href="/catalog?category=OILS" className="hover:text-white transition-colors">Масла</Link></li>
+              <li><Link href="/oils" className="hover:text-white transition-colors">Масла</Link></li>
               <li><Link href="/about" className="hover:text-white transition-colors">За нас</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors">Контакти</Link></li>
             </ul>

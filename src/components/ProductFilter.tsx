@@ -4,15 +4,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { CATEGORIES, CATEGORY_KEYS, VISCOSITY_OTHER } from "@/lib/categories";
 
+type FilterMode = "vehicles" | "oils";
+
 interface ProductFilterProps {
   brands: string[];
   viscosities?: string[];
   packageSizes?: string[];
+  mode?: FilterMode;
 }
 
-export default function ProductFilter({ brands, viscosities = [], packageSizes = [] }: ProductFilterProps) {
+export default function ProductFilter({
+  brands,
+  viscosities = [],
+  packageSizes = [],
+  mode = "vehicles",
+}: ProductFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const basePath = mode === "oils" ? "/oils" : "/catalog";
 
   const currentCategory = searchParams.get("category") || "";
   const currentBrand = searchParams.get("brand") || "";
@@ -20,8 +30,6 @@ export default function ProductFilter({ brands, viscosities = [], packageSizes =
   const currentMaxPrice = searchParams.get("maxPrice") || "";
   const currentViscosity = searchParams.get("viscosity") || "";
   const currentPackage = searchParams.get("package") || "";
-
-  const isOils = currentCategory === "OILS";
 
   const updateFilters = useCallback(
     (key: string, value: string) => {
@@ -31,40 +39,39 @@ export default function ProductFilter({ brands, viscosities = [], packageSizes =
       } else {
         params.delete(key);
       }
-      if (key === "category") {
-        params.delete("viscosity");
-        params.delete("package");
-      }
-      router.push(`/catalog?${params.toString()}`);
+      router.push(`${basePath}?${params.toString()}`);
     },
-    [router, searchParams]
+    [router, searchParams, basePath]
   );
 
   const clearFilters = () => {
-    router.push("/catalog");
+    router.push(basePath);
   };
 
   const hasFilters =
-    currentCategory || currentBrand || currentMinPrice || currentMaxPrice || currentViscosity || currentPackage;
+    (mode === "vehicles" && (currentCategory || currentMinPrice || currentMaxPrice)) ||
+    currentBrand || currentViscosity || currentPackage;
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 mb-8">
       <div className="flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[150px]">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Категория
-          </label>
-          <select
-            value={currentCategory}
-            onChange={(e) => updateFilters("category", e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          >
-            <option value="">Всички</option>
-            {CATEGORY_KEYS.map((key) => (
-              <option key={key} value={key}>{CATEGORIES[key].label}</option>
-            ))}
-          </select>
-        </div>
+        {mode === "vehicles" && (
+          <div className="flex-1 min-w-[150px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Категория
+            </label>
+            <select
+              value={currentCategory}
+              onChange={(e) => updateFilters("category", e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="">Всички</option>
+              {CATEGORY_KEYS.filter((k) => !CATEGORIES[k].fields.oil).map((key) => (
+                <option key={key} value={key}>{CATEGORIES[key].label}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="flex-1 min-w-[150px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -77,14 +84,12 @@ export default function ProductFilter({ brands, viscosities = [], packageSizes =
           >
             <option value="">Всички</option>
             {brands.map((brand) => (
-              <option key={brand} value={brand}>
-                {brand}
-              </option>
+              <option key={brand} value={brand}>{brand}</option>
             ))}
           </select>
         </div>
 
-        {isOils && (
+        {mode === "oils" ? (
           <>
             <div className="flex-1 min-w-[150px]">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -119,9 +124,7 @@ export default function ProductFilter({ brands, viscosities = [], packageSizes =
               </select>
             </div>
           </>
-        )}
-
-        {!isOils && (
+        ) : (
           <>
             <div className="flex-1 min-w-[120px]">
               <label className="block text-sm font-medium text-gray-700 mb-1">
