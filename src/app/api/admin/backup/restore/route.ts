@@ -92,10 +92,13 @@ export async function POST(req: NextRequest) {
           price: number | null;
           category: string;
           brand: string;
-          year: number;
+          year: number | null;
           horsepower: string | null;
           engine: string | null;
           weight: string | null;
+          viscosity: string | null;
+          volumeValue: number | null;
+          volumeUnit: string | null;
           images: string;
           address: string | null;
           lat: number | null;
@@ -152,6 +155,9 @@ export async function POST(req: NextRequest) {
               horsepower: p.horsepower,
               engine: p.engine,
               weight: p.weight,
+              viscosity: p.viscosity ?? null,
+              volumeValue: p.volumeValue ?? null,
+              volumeUnit: p.volumeUnit ?? null,
               images: p.images,
               address: p.address,
               lat: p.lat,
