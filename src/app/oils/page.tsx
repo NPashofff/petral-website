@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
-import ProductCard from "@/components/ProductCard";
+import OilsTable, { type OilRow } from "@/components/OilsTable";
 import ProductFilter from "@/components/ProductFilter";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
@@ -26,7 +26,7 @@ function parsePackageParam(pkg: string | undefined): { value: number; unit: stri
   return { value: parseFloat(m[1]), unit: m[2] === "L" ? "L" : "kg" };
 }
 
-async function OilsList({ searchParams }: OilsPageProps) {
+async function OilsListing({ searchParams }: OilsPageProps) {
   const params = await searchParams;
   const { brand, viscosity, package: pkg } = params;
 
@@ -43,21 +43,26 @@ async function OilsList({ searchParams }: OilsPageProps) {
     where.volumeUnit = parsedPkg.unit;
   }
 
-  const products = await prisma.product.findMany({ where, orderBy: { name: "asc" } });
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      brand: true,
+      price: true,
+      viscosity: true,
+      volumeValue: true,
+      volumeUnit: true,
+    },
+  });
 
-  return products.length === 0 ? (
-    <div className="text-center py-16">
-      <p className="text-gray-500 text-lg">Няма намерени продукти.</p>
-      <p className="text-gray-400 text-sm mt-2">Опитайте с различни филтри.</p>
-    </div>
-  ) : (
+  const rows: OilRow[] = products;
+
+  return (
     <>
-      <p className="text-gray-500 mb-6">{products.length} продукт{products.length !== 1 ? "а" : ""}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
-          <ProductCard key={product.id} {...product} />
-        ))}
-      </div>
+      <p className="text-gray-500 mb-4">{rows.length} продукт{rows.length !== 1 ? "а" : ""}</p>
+      <OilsTable rows={rows} />
     </>
   );
 }
@@ -102,7 +107,7 @@ export default async function OilsPage(props: OilsPageProps) {
         />
       </Suspense>
       <Suspense fallback={<div className="text-center py-16 text-gray-400">Зареждане...</div>}>
-        <OilsList searchParams={Promise.resolve(params)} />
+        <OilsListing searchParams={Promise.resolve(params)} />
       </Suspense>
     </div>
   );
