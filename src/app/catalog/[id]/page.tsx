@@ -74,7 +74,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <nav className="mb-6 text-sm text-gray-500">
         <Link href="/" className="hover:text-gray-700">Начало</Link>
         <span className="mx-2">/</span>
-        <Link href="/catalog" className="hover:text-gray-700">Каталог</Link>
+        <Link href={isOil ? "/oils" : "/catalog"} className="hover:text-gray-700">
+          {isOil ? "Масла" : "Каталог"}
+        </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-900">{product.name}</span>
       </nav>
