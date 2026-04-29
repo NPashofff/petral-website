@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { parseBrandFromFilename, parsePackage, parseViscosity } from "../src/lib/oil-import";
+import { detectCurrency, parseBrandFromFilename, parsePackage, parseViscosity } from "../src/lib/oil-import";
 
 test.describe("oil-import parser", () => {
   test("parseBrandFromFilename extracts first non-stopword tokens", () => {
@@ -36,6 +36,18 @@ test.describe("oil-import parser", () => {
     expect(parseViscosity("Gadus S2 V100 2 18kg")).toBe("NLGI 2");
     expect(parseViscosity("Gadus S2 V220 00 180kg")).toBe("NLGI 00");
     expect(parseViscosity("Gadus S3 V460 1.5 180 KG")).toBe("NLGI 1.5");
+  });
+
+  test("detectCurrency reads BGN / EUR / symbols from header", () => {
+    expect(detectCurrency("Клиентска цена в лв/л без ДДС")).toBe("BGN");
+    expect(detectCurrency("Цена в лева")).toBe("BGN");
+    expect(detectCurrency("Price in BGN")).toBe("BGN");
+    expect(detectCurrency("Клиентска цена в евро/л без ДДС")).toBe("EUR");
+    expect(detectCurrency("Price EUR/L")).toBe("EUR");
+    expect(detectCurrency("Цена в €/L")).toBe("EUR");
+    expect(detectCurrency("Без обозначение")).toBeNull();
+    expect(detectCurrency("")).toBeNull();
+    expect(detectCurrency(null)).toBeNull();
   });
 
   test("parseViscosity returns null for unknown / Други", () => {

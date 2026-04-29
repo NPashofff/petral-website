@@ -1,5 +1,20 @@
 export type ParsedPackage = { value: number; unit: "L" | "kg" };
 
+export type Currency = "EUR" | "BGN";
+
+export function detectCurrency(header: string | null | undefined): Currency | null {
+  if (!header) return null;
+  const h = header.toLowerCase();
+  // \b doesn't work for Cyrillic, so use Unicode-aware lookarounds. Order
+  // matters: check EUR first since "евро" is unambiguous and we don't want a
+  // stray "лв" inside an EUR header to win.
+  const eur = /€|(?<![\p{L}])eur(?![\p{L}])|евро/u;
+  const bgn = /(?<![\p{L}])bgn(?![\p{L}])|(?<![\p{L}])leva?(?![\p{L}])|(?<![\p{L}])лв(?![\p{L}])|(?<![\p{L}])лева?(?![\p{L}])/u;
+  if (eur.test(h)) return "EUR";
+  if (bgn.test(h)) return "BGN";
+  return null;
+}
+
 const ISO_VG_GRADES = new Set([22, 32, 46, 68, 100, 150, 220, 320, 460, 680, 1000]);
 const NLGI_GRADES = ["000", "00", "0", "1.5", "1", "2", "3"];
 

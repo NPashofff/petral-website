@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/db";
-import { parseBrandFromFilename, parsePackage, parseViscosity, slugify } from "@/lib/oil-import";
+import { detectCurrency, parseBrandFromFilename, parsePackage, parseViscosity, slugify } from "@/lib/oil-import";
 import { bgnToEur } from "@/lib/currency";
 
 export const runtime = "nodejs";
@@ -35,6 +35,20 @@ export async function POST(req: NextRequest) {
 
     const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, blankrows: false });
 
+    const headerCell = rows[0]?.[1];
+    const headerText = headerCell != null ? String(headerCell) : "";
+    const currency = detectCurrency(headerText);
+    if (!currency) {
+      return NextResponse.json(
+        {
+          error:
+            `Не мога да определя валутата от заглавието на колона B: "${headerText.slice(0, 120)}". ` +
+            `Очаквам да съдържа "лв"/"BGN" или "€"/"EUR"/"евро".`,
+        },
+        { status: 400 }
+      );
+    }
+
     let created = 0;
     let updated = 0;
     let skipped = 0;
@@ -62,12 +76,12 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const priceBgn = typeof rawPrice === "number" ? rawPrice : parseFloat(String(rawPrice ?? ""));
-      if (!isFinite(priceBgn) || priceBgn <= 0) {
+      const rawPriceNum = typeof rawPrice === "number" ? rawPrice : parseFloat(String(rawPrice ?? ""));
+      if (!isFinite(rawPriceNum) || rawPriceNum <= 0) {
         skipped++;
         continue;
       }
-      const price = bgnToEur(priceBgn);
+      const price = currency === "BGN" ? bgnToEur(rawPriceNum) : rawPriceNum;
 
       const viscosity = parseViscosity(name);
       const pkg = parsePackage(name);
@@ -115,7 +129,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ brand, created, updated, skipped, errors });
+    return NextResponse.json({ brand, currency, created, updated, skipped, errors });
   } catch (e) {
     return NextResponse.json(
       { error: "Грешка при импорт.", detail: e instanceof Error ? e.message : "unknown" },

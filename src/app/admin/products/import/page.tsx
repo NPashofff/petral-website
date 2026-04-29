@@ -6,6 +6,7 @@ import Toast from "@/components/Toast";
 
 type ImportResult = {
   brand: string;
+  currency: "EUR" | "BGN";
   created: number;
   updated: number;
   skipped: number;
@@ -87,6 +88,10 @@ export default function OilsImportPage() {
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
               <dt className="text-gray-600">Марка</dt>
               <dd className="font-medium">{result.brand}</dd>
+              <dt className="text-gray-600">Валута в Excel</dt>
+              <dd className="font-medium">
+                {result.currency === "EUR" ? "€ (EUR)" : "лв (BGN, конвертирано в €)"}
+              </dd>
               <dt className="text-gray-600">Нови продукти</dt>
               <dd className="font-medium text-green-700">{result.created}</dd>
               <dt className="text-gray-600">Обновени</dt>
