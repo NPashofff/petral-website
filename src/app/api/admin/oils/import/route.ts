@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/db";
 import { parseBrandFromFilename, parsePackage, parseViscosity, slugify } from "@/lib/oil-import";
+import { bgnToEur } from "@/lib/currency";
 
 export const runtime = "nodejs";
 
@@ -61,11 +62,12 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const price = typeof rawPrice === "number" ? rawPrice : parseFloat(String(rawPrice ?? ""));
-      if (!isFinite(price) || price <= 0) {
+      const priceBgn = typeof rawPrice === "number" ? rawPrice : parseFloat(String(rawPrice ?? ""));
+      if (!isFinite(priceBgn) || priceBgn <= 0) {
         skipped++;
         continue;
       }
+      const price = bgnToEur(priceBgn);
 
       const viscosity = parseViscosity(name);
       const pkg = parsePackage(name);

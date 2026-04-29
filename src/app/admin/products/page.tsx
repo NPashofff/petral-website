@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import DeleteProductButton from "./DeleteProductButton";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
+import { formatPrice } from "@/lib/currency";
 
 export const dynamic = "force-dynamic";
 
@@ -45,9 +46,10 @@ export default async function AdminProductsPage() {
             {products.map((product) => {
               const isOil = product.category === "OILS";
               const priceText = product.price != null
-                ? isOil && product.volumeUnit
-                  ? `${product.price.toLocaleString("bg-BG")} лв/${product.volumeUnit}`
-                  : `${product.price.toLocaleString("bg-BG")} лв.`
+                ? formatPrice(product.price, {
+                    unit: isOil ? product.volumeUnit ?? null : null,
+                    showBgn: false,
+                  })
                 : "-";
               return (
                 <tr key={product.id} className="hover:bg-gray-50">

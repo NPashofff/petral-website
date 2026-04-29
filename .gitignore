@@ -46,3 +46,4 @@ prisma/dev.db-journal
 # test artifacts
 /playwright-report
 /test-results
+prisma/.price-converted-to-eur

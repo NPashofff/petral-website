@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 import { resolveProductImage } from "@/lib/brand-logo";
+import { formatPrice } from "@/lib/currency";
 
 interface ProductCardProps {
   id: number;
@@ -35,10 +36,7 @@ export default function ProductCard({
 
   const priceLabel = (() => {
     if (price == null) return "-";
-    if (isOil && volumeUnit) {
-      return `${price.toLocaleString("bg-BG")} лв/${volumeUnit}`;
-    }
-    return `${price.toLocaleString("bg-BG")} лв.`;
+    return formatPrice(price, { unit: isOil ? volumeUnit ?? null : null });
   })();
 
   return (

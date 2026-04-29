@@ -7,6 +7,7 @@ import ProductMapLoader from "@/components/ProductMapLoader";
 import type { Metadata } from "next";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 import { getBrandLogoUrl } from "@/lib/brand-logo";
+import { formatPrice } from "@/lib/currency";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -97,19 +98,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="mt-4">
               <p className="text-3xl font-bold text-[var(--color-primary)]">
                 {product.price != null
-                  ? `${product.price.toLocaleString("bg-BG")} лв/${product.volumeUnit ?? ""}`
+                  ? formatPrice(product.price, { unit: product.volumeUnit ?? null })
                   : "Цена при запитване"}
               </p>
               {totalPrice != null && (
                 <p className="text-sm text-gray-600 mt-1">
                   Обща цена за опаковка ({product.volumeValue}{product.volumeUnit}):{" "}
-                  <strong>{totalPrice.toLocaleString("bg-BG", { maximumFractionDigits: 2 })} лв.</strong>
+                  <strong>{formatPrice(totalPrice)}</strong>
                 </p>
               )}
             </div>
           ) : (
             <p className="text-3xl font-bold text-[var(--color-primary)] mt-4">
-              {product.price != null ? `${product.price.toLocaleString("bg-BG")} лв.` : "Цена при запитване"}
+              {product.price != null ? formatPrice(product.price) : "Цена при запитване"}
             </p>
           )}
 
