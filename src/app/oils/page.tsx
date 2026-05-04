@@ -30,7 +30,7 @@ async function OilsListing({ searchParams }: OilsPageProps) {
   const params = await searchParams;
   const { brand, viscosity, package: pkg } = params;
 
-  const where: Prisma.ProductWhereInput = { category: "OILS" };
+  const where: Prisma.ProductWhereInput = { category: "OILS", hidden: false };
   if (brand) where.brand = brand;
   if (viscosity === VISCOSITY_OTHER) {
     where.viscosity = null;
@@ -69,7 +69,7 @@ async function OilsListing({ searchParams }: OilsPageProps) {
 
 export default async function OilsPage(props: OilsPageProps) {
   const brands = await prisma.product.findMany({
-    where: { category: "OILS" },
+    where: { category: "OILS", hidden: false },
     select: { brand: true },
     distinct: ["brand"],
     orderBy: { brand: "asc" },
@@ -77,7 +77,7 @@ export default async function OilsPage(props: OilsPageProps) {
   const brandList = brands.map((b) => b.brand);
 
   const visRows = await prisma.product.findMany({
-    where: { category: "OILS", viscosity: { not: null } },
+    where: { category: "OILS", viscosity: { not: null }, hidden: false },
     select: { viscosity: true },
     distinct: ["viscosity"],
   });
@@ -86,7 +86,7 @@ export default async function OilsPage(props: OilsPageProps) {
     .sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
 
   const pkgRows = await prisma.product.findMany({
-    where: { category: "OILS", volumeValue: { not: null }, volumeUnit: { not: null } },
+    where: { category: "OILS", volumeValue: { not: null }, volumeUnit: { not: null }, hidden: false },
     select: { volumeValue: true, volumeUnit: true },
   });
   const seen = new Set<string>();

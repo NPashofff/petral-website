@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { getSession } from "@/lib/auth";
+import { logError } from "@/lib/logger";
 
 const prisma = new PrismaClient();
 
@@ -46,7 +47,8 @@ export async function PUT(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/auth/password" });
     return NextResponse.json(
       { error: "Възникна грешка при смяна на паролата" },
       { status: 500 }

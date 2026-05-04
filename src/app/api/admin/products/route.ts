@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 
 export async function POST(request: Request) {
   try {
@@ -7,7 +8,7 @@ export async function POST(request: Request) {
     const {
       name, slug, description, price, category, brand, year,
       horsepower, engine, weight, viscosity, volumeValue, volumeUnit,
-      images, address, lat, lon, featured, colorIds,
+      images, address, lat, lon, featured, hidden, colorIds,
     } = body;
 
     if (!name || !slug || !category || !brand) {
@@ -44,12 +45,14 @@ export async function POST(request: Request) {
         lat: lat != null ? parseFloat(lat) : null,
         lon: lon != null ? parseFloat(lon) : null,
         featured: !!featured,
+        hidden: !!hidden,
         colors: { connect: cleanColorIds.map((id) => ({ id })) },
       },
     });
 
     return NextResponse.json({ success: true, id: product.id });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/products" });
     return NextResponse.json({ error: "Грешка при създаване на продукт." }, { status: 500 });
   }
 }

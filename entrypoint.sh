@@ -13,5 +13,9 @@ node node_modules/prisma/build/index.js db push --skip-generate --schema=/app/da
 # Seed database (idempotent — skips if data exists)
 node /app/prisma-assets/seed.js
 
+# Migrate uploads from public/uploads -> data/uploads and rewrite DB URLs
+# (idempotent — only does work the first time, no-op on subsequent runs).
+node /app/prisma-assets/migrate-uploads.js
+
 # Start Next.js
 exec node server.js

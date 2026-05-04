@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -63,7 +64,8 @@ export async function DELETE(_req: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     await prisma.color.delete({ where: { id: parseInt(id) } });
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/colors/[id]" });
     return NextResponse.json(
       { error: "Грешка при изтриване на цвят." },
       { status: 500 }

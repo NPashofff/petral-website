@@ -14,6 +14,7 @@ const adminLinks = [
   { href: "/admin/admins", label: "Админи" },
   { href: "/admin/settings", label: "Настройки" },
   { href: "/admin/backup", label: "Бекъп" },
+  { href: "/admin/logs", label: "Логове" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

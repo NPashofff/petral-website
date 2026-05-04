@@ -39,6 +39,7 @@ export default async function AdminProductsPage() {
               <th className="text-left px-4 py-3 font-medium">Марка</th>
               <th className="text-right px-4 py-3 font-medium">Цена</th>
               <th className="text-center px-4 py-3 font-medium">Featured</th>
+              <th className="text-center px-4 py-3 font-medium">Скрит</th>
               <th className="text-right px-4 py-3 font-medium">Действия</th>
             </tr>
           </thead>
@@ -52,7 +53,7 @@ export default async function AdminProductsPage() {
                   })
                 : "-";
               return (
-                <tr key={product.id} className="hover:bg-gray-50">
+                <tr key={product.id} className={`hover:bg-gray-50 ${product.hidden ? "opacity-50" : ""}`}>
                   <td className="px-4 py-3 text-gray-500">{product.id}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
                   <td className="px-4 py-3">
@@ -63,6 +64,7 @@ export default async function AdminProductsPage() {
                   <td className="px-4 py-3 text-gray-600">{product.brand}</td>
                   <td className="px-4 py-3 text-right font-medium">{priceText}</td>
                   <td className="px-4 py-3 text-center">{product.featured ? "✓" : ""}</td>
+                  <td className="px-4 py-3 text-center">{product.hidden ? "✓" : ""}</td>
                   <td className="px-4 py-3 text-right space-x-2">
                     <Link
                       href={`/admin/products/${product.id}/edit`}

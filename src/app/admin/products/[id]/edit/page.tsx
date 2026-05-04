@@ -34,6 +34,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     lat: product.lat ?? null,
     lon: product.lon ?? null,
     featured: product.featured,
+    hidden: product.hidden,
     colorIds: product.colors.map((c) => c.id),
   };
 

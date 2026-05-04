@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { readdir, stat } from "fs/promises";
 import path from "path";
+import { logError } from "@/lib/logger";
+import { getUploadsDir, uploadUrl } from "@/lib/uploads";
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -11,7 +13,7 @@ export async function GET() {
   }
 
   try {
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    const uploadsDir = getUploadsDir();
     const files = await readdir(uploadsDir).catch(() => [] as string[]);
 
     const imageExts = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
@@ -23,14 +25,15 @@ export async function GET() {
     const withStats = await Promise.all(
       imageFiles.map(async (f) => {
         const s = await stat(path.join(uploadsDir, f)).catch(() => null);
-        return { url: `/uploads/${f}`, mtime: s?.mtimeMs || 0 };
+        return { url: uploadUrl(f), mtime: s?.mtimeMs || 0 };
       })
     );
 
     withStats.sort((a, b) => b.mtime - a.mtime);
 
     return NextResponse.json({ images: withStats.map((f) => f.url) });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/uploads" });
     return NextResponse.json({ images: [] });
   }
 }

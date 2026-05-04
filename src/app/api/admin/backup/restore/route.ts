@@ -4,6 +4,8 @@ import fs from "fs/promises";
 import path from "path";
 import JSZip from "jszip";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
+import { getUploadsDir } from "@/lib/uploads";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +26,7 @@ async function readJson<T>(zip: JSZip, filename: string): Promise<T | null> {
 }
 
 async function writeUploadsFromZip(zip: JSZip): Promise<number> {
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  const uploadsDir = getUploadsDir();
   await fs.mkdir(uploadsDir, { recursive: true });
 
   const uploadFiles = zip.folder("uploads");
@@ -104,6 +106,7 @@ export async function POST(req: NextRequest) {
           lat: number | null;
           lon: number | null;
           featured: boolean;
+          hidden?: boolean;
           createdAt: string;
           colorIds: number[];
         }>
@@ -163,6 +166,7 @@ export async function POST(req: NextRequest) {
               lat: p.lat,
               lon: p.lon,
               featured: p.featured,
+              hidden: !!p.hidden,
               createdAt: new Date(p.createdAt),
               colors: { connect: (p.colorIds || []).map((id) => ({ id })) },
             },
@@ -259,6 +263,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, restored });
   } catch (error) {
     console.error("Restore error:", error);
+    await logError(error, { route: "/api/admin/backup/restore" });
     return NextResponse.json(
       { error: "Грешка при възстановяване. Проверете ZIP файла." },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendContactNotification } from "@/lib/email";
+import { logError } from "@/lib/logger";
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -34,7 +35,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true, id: contact.id });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/contact" });
     return NextResponse.json({ error: "Грешка при изпращане на съобщението." }, { status: 500 });
   }
 }

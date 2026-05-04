@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { logError } from "@/lib/logger";
 
 const prisma = new PrismaClient();
 
@@ -36,7 +37,8 @@ export async function POST(request: NextRequest) {
     await createSession({ adminId: admin.id, username: admin.username });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/auth/login" });
     return NextResponse.json(
       { error: "Възникна грешка при вход" },
       { status: 500 }

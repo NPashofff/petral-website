@@ -27,6 +27,7 @@ interface ProductFormData {
   lat: number | null;
   lon: number | null;
   featured: boolean;
+  hidden: boolean;
   colorIds: number[];
 }
 
@@ -61,6 +62,7 @@ const defaultData: ProductFormData = {
   lat: null,
   lon: null,
   featured: false,
+  hidden: false,
   colorIds: [],
 };
 
@@ -444,6 +446,7 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
             Добави линк
           </button>
         </div>
+        <p className="text-xs text-gray-500 mt-1">JPG, PNG, WebP, GIF (макс. 5MB)</p>
 
         {showUrlInput && (
           <div className="flex gap-2 mt-2">
@@ -520,6 +523,19 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
         />
         <label htmlFor="featured" className="text-sm font-medium text-gray-700">
           Представен продукт (показва се на началната страница)
+        </label>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="hidden"
+          checked={form.hidden}
+          onChange={(e) => setForm({ ...form, hidden: e.target.checked })}
+          className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+        />
+        <label htmlFor="hidden" className="text-sm font-medium text-gray-700">
+          Скрит продукт (не се показва никъде на сайта)
         </label>
       </div>
 

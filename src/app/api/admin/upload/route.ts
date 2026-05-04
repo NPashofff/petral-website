@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { logError } from "@/lib/logger";
+import { getUploadsDir, uploadUrl } from "@/lib/uploads";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,7 +28,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    const uploadsDir = getUploadsDir();
     await mkdir(uploadsDir, { recursive: true });
 
     const ext = path.extname(file.name) || ".jpg";
@@ -39,8 +41,9 @@ export async function POST(req: NextRequest) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     await writeFile(path.join(uploadsDir, filename), bytes);
 
-    return NextResponse.json({ url: `/uploads/${filename}` });
-  } catch {
+    return NextResponse.json({ url: uploadUrl(filename) });
+  } catch (err) {
+    await logError(err, { route: "/api/admin/upload" });
     return NextResponse.json({ error: "Грешка при качване." }, { status: 500 });
   }
 }

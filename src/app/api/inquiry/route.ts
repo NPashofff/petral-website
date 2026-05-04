@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendInquiryNotification } from "@/lib/email";
+import { logError } from "@/lib/logger";
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -49,7 +50,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true, id: inquiry.id });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/inquiry" });
     return NextResponse.json({ error: "Грешка при обработка на запитването." }, { status: 500 });
   }
 }

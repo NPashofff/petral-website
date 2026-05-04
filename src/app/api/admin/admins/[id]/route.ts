@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getSession } from "@/lib/auth";
+import { logError } from "@/lib/logger";
 
 const prisma = new PrismaClient();
 
@@ -35,7 +36,8 @@ export async function DELETE(
     await prisma.admin.delete({ where: { id: adminId } });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/admins/[id]" });
     return NextResponse.json(
       { error: "Възникна грешка при изтриване" },
       { status: 500 }

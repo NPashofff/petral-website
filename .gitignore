@@ -47,3 +47,7 @@ prisma/dev.db-journal
 /playwright-report
 /test-results
 prisma/.price-converted-to-eur
+
+# local persistent volume data (uploads live on TrueNAS volume in prod)
+/data
+

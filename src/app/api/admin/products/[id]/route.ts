@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { logError } from "@/lib/logger";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -12,7 +13,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const {
       name, slug, description, price, category, brand, year,
       horsepower, engine, weight, viscosity, volumeValue, volumeUnit,
-      images, address, lat, lon, featured, colorIds,
+      images, address, lat, lon, featured, hidden, colorIds,
     } = body;
 
     if (!name || !slug || !category || !brand) {
@@ -50,12 +51,14 @@ export async function PUT(request: Request, context: RouteContext) {
         lat: lat != null ? parseFloat(lat) : null,
         lon: lon != null ? parseFloat(lon) : null,
         featured: !!featured,
+        hidden: !!hidden,
         colors: { set: cleanColorIds.map((id) => ({ id })) },
       },
     });
 
     return NextResponse.json({ success: true, id: product.id });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/products/[id]" });
     return NextResponse.json({ error: "Грешка при обновяване на продукт." }, { status: 500 });
   }
 }
@@ -69,7 +72,8 @@ export async function DELETE(_request: Request, context: RouteContext) {
     await prisma.product.delete({ where: { id: parseInt(id) } });
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/products/[id]" });
     return NextResponse.json({ error: "Грешка при изтриване на продукт." }, { status: 500 });
   }
 }

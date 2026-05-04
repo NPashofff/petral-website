@@ -24,7 +24,7 @@ async function ProductList({ searchParams }: CatalogPageProps) {
   const params = await searchParams;
   const { category, brand, minPrice, maxPrice } = params;
 
-  const where: Prisma.ProductWhereInput = { category: { not: "OILS" } };
+  const where: Prisma.ProductWhereInput = { category: { not: "OILS" }, hidden: false };
   if (category && category !== "OILS") where.category = category;
   if (brand) where.brand = brand;
   if (minPrice || maxPrice) {
@@ -60,7 +60,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
   }
 
   const brands = await prisma.product.findMany({
-    where: { category: { not: "OILS" } },
+    where: { category: { not: "OILS" }, hidden: false },
     select: { brand: true },
     distinct: ["brand"],
     orderBy: { brand: "asc" },

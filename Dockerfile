@@ -48,10 +48,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma schema, generated client, and compiled seed
+# Copy Prisma schema, generated client, compiled seed, and one-shot migration scripts
 # Note: schema and seed go to /app/prisma-assets/ to avoid being hidden by the db-data volume on /app/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma-assets/schema.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma-assets/seed.js
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/migrate-uploads.js ./prisma-assets/migrate-uploads.js
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 
 # Copy entrypoint
@@ -59,7 +60,9 @@ COPY --chown=nextjs:nodejs entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
 # Ensure directories exist and are writable
-RUN mkdir -p /app/public/uploads /app/data && chown -R nextjs:nodejs /app/public/uploads /app/data
+# /app/data is mounted as a persistent volume; uploads now live there so
+# newly uploaded files don't depend on Next.js's build-time public manifest.
+RUN mkdir -p /app/data/uploads && chown -R nextjs:nodejs /app/data
 
 USER nextjs
 

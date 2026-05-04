@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { getSession } from "@/lib/auth";
+import { logError } from "@/lib/logger";
 
 const prisma = new PrismaClient();
 
@@ -18,7 +19,8 @@ export async function GET() {
     });
 
     return NextResponse.json(admins);
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/admins" });
     return NextResponse.json({ error: "Грешка" }, { status: 500 });
   }
 }
@@ -60,7 +62,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ id: admin.id }, { status: 201 });
-  } catch {
+  } catch (err) {
+    await logError(err, { route: "/api/admin/admins" });
     return NextResponse.json(
       { error: "Възникна грешка при създаване на админ" },
       { status: 500 }

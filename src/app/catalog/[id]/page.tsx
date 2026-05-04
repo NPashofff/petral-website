@@ -36,7 +36,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
   });
 
-  if (!product) notFound();
+  if (!product || product.hidden) notFound();
 
   const rawImages: string[] = JSON.parse(product.images);
   const images: string[] = rawImages.length > 0

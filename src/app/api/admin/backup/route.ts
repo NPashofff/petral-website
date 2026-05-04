@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import JSZip from "jszip";
 import { prisma } from "@/lib/db";
+import { getUploadsDir } from "@/lib/uploads";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ async function requireAdmin() {
 }
 
 async function addUploadsToZip(zip: JSZip) {
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  const uploadsDir = getUploadsDir();
   try {
     const entries = await fs.readdir(uploadsDir);
     for (const entry of entries) {

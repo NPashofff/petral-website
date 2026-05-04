@@ -27,6 +27,7 @@ model Product {
   lat         Float?
   lon         Float?
   featured    Boolean   @default(false)
+  hidden      Boolean   @default(false)
   createdAt   DateTime  @default(now())
   inquiries   Inquiry[]
   colors      Color[]   @relation("ProductColors")
@@ -75,4 +76,19 @@ model Admin {
   password  String
   name      String
   createdAt DateTime @default(now())
+}
+
+model ErrorLog {
+  id         Int      @id @default(autoincrement())
+  level      String   @default("error")
+  message    String
+  stack      String?
+  route      String?
+  method     String?
+  statusCode Int?
+  context    String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([level])
 }
