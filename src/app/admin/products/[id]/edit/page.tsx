@@ -10,7 +10,10 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   const { id } = await params;
   const product = await prisma.product.findUnique({
     where: { id: parseInt(id) },
-    include: { colors: { select: { id: true } } },
+    include: {
+      colors: { select: { id: true } },
+      colorImages: { select: { colorId: true, imageUrl: true } },
+    },
   });
 
   if (!product) notFound();
@@ -36,6 +39,9 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     featured: product.featured,
     hidden: product.hidden,
     colorIds: product.colors.map((c) => c.id),
+    colorImageMap: Object.fromEntries(
+      product.colorImages.map((row) => [row.colorId, row.imageUrl])
+    ),
   };
 
   return (

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import DeleteRowButton from "@/components/DeleteRowButton";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,14 @@ export default async function AdminInquiriesPage() {
                 </p>
               </div>
             </div>
-            <p className="text-gray-600 text-sm">{inq.message}</p>
+            <p className="text-gray-600 text-sm mb-3">{inq.message}</p>
+            <div className="flex justify-end border-t border-gray-100 pt-3">
+              <DeleteRowButton
+                endpoint={`/api/admin/inquiries/${inq.id}`}
+                confirmTitle="Изтриване на запитване"
+                confirmMessage={`Сигурни ли сте, че искате да изтриете запитването от ${inq.name}? Действието е необратимо.`}
+              />
+            </div>
           </div>
         ))}
         {inquiries.length === 0 && (

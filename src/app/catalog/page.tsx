@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import ProductCard from "@/components/ProductCard";
 import ProductFilter from "@/components/ProductFilter";
+import Pagination from "@/components/Pagination";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 
@@ -11,18 +12,32 @@ export const metadata: Metadata = {
   description: "Разгледайте нашия каталог с трактори, ATV и UTV. Филтрирайте по категория, марка и цена.",
 };
 
+const PAGE_SIZE = 24;
+
 interface CatalogPageProps {
   searchParams: Promise<{
     category?: string;
     brand?: string;
     minPrice?: string;
     maxPrice?: string;
+    q?: string;
+    page?: string;
   }>;
+}
+
+function buildQueryString(params: Record<string, string | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value) search.set(key, value);
+  }
+  const str = search.toString();
+  return str ? `?${str}` : "";
 }
 
 async function ProductList({ searchParams }: CatalogPageProps) {
   const params = await searchParams;
-  const { category, brand, minPrice, maxPrice } = params;
+  const { category, brand, minPrice, maxPrice, q } = params;
+  const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
 
   const where: Prisma.ProductWhereInput = { category: { not: "OILS" }, hidden: false };
   if (category && category !== "OILS") where.category = category;
@@ -32,22 +47,51 @@ async function ProductList({ searchParams }: CatalogPageProps) {
     if (minPrice) where.price.gte = parseFloat(minPrice);
     if (maxPrice) where.price.lte = parseFloat(maxPrice);
   }
+  const term = q?.trim();
+  if (term) {
+    where.OR = [
+      { name: { contains: term } },
+      { description: { contains: term } },
+      { brand: { contains: term } },
+    ];
+  }
 
-  const products = await prisma.product.findMany({ where, orderBy: { createdAt: "desc" } });
+  const [total, products] = await prisma.$transaction([
+    prisma.product.count({ where }),
+    prisma.product.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+  ]);
 
-  return products.length === 0 ? (
-    <div className="text-center py-16">
-      <p className="text-gray-500 text-lg">Няма намерени продукти.</p>
-      <p className="text-gray-400 text-sm mt-2">Опитайте с различни филтри.</p>
-    </div>
-  ) : (
+  if (total === 0) {
+    return (
+      <div className="text-center py-16">
+        <p className="text-gray-500 text-lg">Няма намерени продукти.</p>
+        <p className="text-gray-400 text-sm mt-2">Опитайте с различни филтри.</p>
+      </div>
+    );
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const baseQuery = { category, brand, minPrice, maxPrice, q };
+  const buildHref = (target: number) =>
+    `/catalog${buildQueryString({ ...baseQuery, page: target > 1 ? String(target) : undefined })}`;
+
+  return (
     <>
-      <p className="text-gray-500 mb-6">{products.length} продукт{products.length !== 1 ? "а" : ""}</p>
+      <p className="text-gray-500 mb-6">
+        {total} продукт{total !== 1 ? "а" : ""}
+        {totalPages > 1 && ` · стр. ${page} от ${totalPages}`}
+      </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
           <ProductCard key={product.id} {...product} />
         ))}
       </div>
+      <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />
     </>
   );
 }

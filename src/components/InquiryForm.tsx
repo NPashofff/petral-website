@@ -7,6 +7,7 @@ interface Color {
   id: number;
   name: string;
   hex: string;
+  imageUrl?: string | null;
 }
 
 interface InquiryFormProps {
@@ -138,7 +139,10 @@ export default function InquiryForm({ productId, productName, colors = [] }: Inq
                     name="inquiry-color"
                     value={color.id}
                     checked={active}
-                    onChange={() => setSelectedColorId(color.id)}
+                    onChange={() => {
+                      setSelectedColorId(color.id);
+                      window.dispatchEvent(new CustomEvent("petral:color-selected", { detail: { colorId: color.id } }));
+                    }}
                     className="sr-only"
                   />
                   <span

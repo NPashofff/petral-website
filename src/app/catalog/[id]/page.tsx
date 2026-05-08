@@ -8,19 +8,46 @@ import type { Metadata } from "next";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 import { getBrandLogoUrl } from "@/lib/brand-logo";
 import { formatPrice } from "@/lib/currency";
+import { absoluteUrl } from "@/lib/site";
+import { parseImages } from "@/lib/images";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
 }
 
+function plainText(html: string, max = 160): string {
+  return html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, max);
+}
+
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { id } = await params;
   const product = await prisma.product.findUnique({ where: { id: parseInt(id) } });
-  if (!product) return { title: "Продуктът не е намерен" };
+  if (!product || product.hidden) return { title: "Продуктът не е намерен" };
+
+  const description = plainText(product.description);
+  const images = parseImages(product.images);
+  const ogImage = images[0] ?? getBrandLogoUrl(product.brand) ?? "/images/placeholder.jpg";
+  const url = absoluteUrl(`/catalog/${product.id}`);
 
   return {
     title: `${product.name} - Петрал Груп`,
-    description: product.description.replace(/<[^>]*>/g, '').slice(0, 160),
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      url,
+      title: product.name,
+      description,
+      siteName: "Петрал Груп",
+      locale: "bg_BG",
+      images: [{ url: absoluteUrl(ogImage), alt: product.name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: [absoluteUrl(ogImage)],
+    },
   };
 }
 
@@ -33,19 +60,60 @@ export default async function ProductPage({ params }: ProductPageProps) {
         orderBy: [{ order: "asc" }, { name: "asc" }],
         select: { id: true, name: true, hex: true },
       },
+      colorImages: {
+        include: {
+          color: { select: { id: true, name: true, hex: true, order: true } },
+        },
+        orderBy: [{ color: { order: "asc" } }, { color: { name: "asc" } }],
+      },
     },
   });
 
   if (!product || product.hidden) notFound();
 
-  const rawImages: string[] = JSON.parse(product.images);
+  const rawImages = parseImages(product.images);
   const images: string[] = rawImages.length > 0
     ? rawImages
     : product.category === "OILS"
       ? [getBrandLogoUrl(product.brand) ?? "/images/placeholder.jpg"]
       : [];
 
+  const productUrl = absoluteUrl(`/catalog/${product.id}`);
+  const jsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: product.name,
+    description: plainText(product.description, 5000),
+    image: images.map((src) => absoluteUrl(src)),
+    sku: String(product.id),
+    brand: { "@type": "Brand", name: product.brand },
+    url: productUrl,
+    ...(product.price != null
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: productUrl,
+            priceCurrency: "EUR",
+            price: product.price.toFixed(2),
+            availability: "https://schema.org/InStock",
+          },
+        }
+      : {}),
+  };
+
   const isOil = product.category === "OILS";
+  const colorImages = product.colorImages
+    .filter((item) => images.includes(item.imageUrl))
+    .map((item) => ({
+      colorId: item.colorId,
+      name: item.color.name,
+      hex: item.color.hex,
+      imageUrl: item.imageUrl,
+    }));
+  const inquiryColors = product.colors.map((color) => ({
+    ...color,
+    imageUrl: colorImages.find((item) => item.colorId === color.id)?.imageUrl ?? null,
+  }));
   const totalPrice =
     isOil && product.price != null && product.volumeValue != null
       ? product.price * product.volumeValue
@@ -71,6 +139,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-gray-500">
         <Link href="/" className="hover:text-gray-700">Начало</Link>
@@ -85,7 +157,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Top section: Gallery + Key info side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Left: Gallery */}
-        <ImageGallery images={images} alt={product.name} />
+        <ImageGallery images={images} alt={product.name} colorImages={colorImages} />
 
         {/* Right: Key info */}
         <div>
@@ -156,7 +228,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       {/* Inquiry form - at the bottom */}
       <div className="mt-12">
-        <InquiryForm productId={product.id} productName={product.name} colors={product.colors} />
+        <InquiryForm productId={product.id} productName={product.name} colors={inquiryColors} />
       </div>
     </div>
   );

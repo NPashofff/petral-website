@@ -18,7 +18,7 @@ export const CATEGORIES: Record<CategoryKey, CategoryConfig> = {
     fields: { vehicle: true },
   },
   ATV: {
-    label: "АТВ",
+    label: "ATV",
     badgeClass: "bg-orange-100 text-orange-800",
     fields: { vehicle: true },
   },

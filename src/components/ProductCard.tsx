@@ -3,6 +3,7 @@ import Image from "next/image";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 import { resolveProductImage } from "@/lib/brand-logo";
 import { formatPrice } from "@/lib/currency";
+import { parseImages } from "@/lib/images";
 
 interface ProductCardProps {
   id: number;
@@ -30,7 +31,7 @@ export default function ProductCard({
   volumeValue,
   volumeUnit,
 }: ProductCardProps) {
-  const imageList: string[] = JSON.parse(images);
+  const imageList = parseImages(images);
   const firstImage = resolveProductImage(imageList, brand, category);
   const isOil = category === "OILS";
 

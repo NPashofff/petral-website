@@ -1,5 +1,8 @@
 import { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
+import { absoluteUrl } from "@/lib/site";
+
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await prisma.product.findMany({
@@ -8,31 +11,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   });
 
   const productUrls = products.map((product) => ({
-    url: `https://petralgroup.bg/catalog/${product.id}`,
+    url: absoluteUrl(`/catalog/${product.id}`),
     lastModified: product.createdAt,
   }));
 
   return [
     {
-      url: "https://petralgroup.bg",
+      url: absoluteUrl("/"),
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 1,
     },
     {
-      url: "https://petralgroup.bg/catalog",
+      url: absoluteUrl("/catalog"),
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.9,
     },
     {
-      url: "https://petralgroup.bg/about",
+      url: absoluteUrl("/about"),
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
     {
-      url: "https://petralgroup.bg/contact",
+      url: absoluteUrl("/contact"),
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.7,

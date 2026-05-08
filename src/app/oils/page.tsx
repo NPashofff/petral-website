@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import OilsTable, { type OilRow } from "@/components/OilsTable";
 import ProductFilter from "@/components/ProductFilter";
+import Pagination from "@/components/Pagination";
 import type { Metadata } from "next";
 import type { Prisma } from "@prisma/client";
 import { VISCOSITY_OTHER } from "@/lib/categories";
@@ -11,12 +12,27 @@ export const metadata: Metadata = {
   description: "Каталог на масла — индустриални, моторни, грийсове. Филтрирайте по марка, вискозитет и опаковка.",
 };
 
+// Bigger than catalog because table rows are denser than card grids,
+// and OilsTable sorts client-side within the current page.
+const PAGE_SIZE = 50;
+
 interface OilsPageProps {
   searchParams: Promise<{
     brand?: string;
     viscosity?: string;
     package?: string;
+    q?: string;
+    page?: string;
   }>;
+}
+
+function buildQueryString(params: Record<string, string | undefined>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value) search.set(key, value);
+  }
+  const str = search.toString();
+  return str ? `?${str}` : "";
 }
 
 function parsePackageParam(pkg: string | undefined): { value: number; unit: string } | null {
@@ -28,7 +44,8 @@ function parsePackageParam(pkg: string | undefined): { value: number; unit: stri
 
 async function OilsListing({ searchParams }: OilsPageProps) {
   const params = await searchParams;
-  const { brand, viscosity, package: pkg } = params;
+  const { brand, viscosity, package: pkg, q } = params;
+  const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
 
   const where: Prisma.ProductWhereInput = { category: "OILS", hidden: false };
   if (brand) where.brand = brand;
@@ -42,27 +59,48 @@ async function OilsListing({ searchParams }: OilsPageProps) {
     where.volumeValue = parsedPkg.value;
     where.volumeUnit = parsedPkg.unit;
   }
+  const term = q?.trim();
+  if (term) {
+    where.OR = [
+      { name: { contains: term } },
+      { brand: { contains: term } },
+      { viscosity: { contains: term } },
+    ];
+  }
 
-  const products = await prisma.product.findMany({
-    where,
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      brand: true,
-      price: true,
-      viscosity: true,
-      volumeValue: true,
-      volumeUnit: true,
-    },
-  });
+  const [total, products] = await prisma.$transaction([
+    prisma.product.count({ where }),
+    prisma.product.findMany({
+      where,
+      orderBy: { name: "asc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      select: {
+        id: true,
+        name: true,
+        brand: true,
+        price: true,
+        viscosity: true,
+        volumeValue: true,
+        volumeUnit: true,
+      },
+    }),
+  ]);
 
   const rows: OilRow[] = products;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const baseQuery = { brand, viscosity, package: pkg, q };
+  const buildHref = (target: number) =>
+    `/oils${buildQueryString({ ...baseQuery, page: target > 1 ? String(target) : undefined })}`;
 
   return (
     <>
-      <p className="text-gray-500 mb-4">{rows.length} продукт{rows.length !== 1 ? "а" : ""}</p>
+      <p className="text-gray-500 mb-4">
+        {total} продукт{total !== 1 ? "а" : ""}
+        {totalPages > 1 && ` · стр. ${page} от ${totalPages}`}
+      </p>
       <OilsTable rows={rows} />
+      <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />
     </>
   );
 }

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import DeleteRowButton from "@/components/DeleteRowButton";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,14 @@ export default async function AdminContactsPage() {
                 {new Date(contact.createdAt).toLocaleString("bg-BG")}
               </p>
             </div>
-            <p className="text-gray-600 text-sm">{contact.message}</p>
+            <p className="text-gray-600 text-sm mb-3">{contact.message}</p>
+            <div className="flex justify-end border-t border-gray-100 pt-3">
+              <DeleteRowButton
+                endpoint={`/api/admin/contacts/${contact.id}`}
+                confirmTitle="Изтриване на съобщение"
+                confirmMessage={`Сигурни ли сте, че искате да изтриете съобщението от ${contact.name}? Действието е необратимо.`}
+              />
+            </div>
           </div>
         ))}
         {contacts.length === 0 && (
