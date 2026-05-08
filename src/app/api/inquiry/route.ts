@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendInquiryNotification } from "@/lib/email";
 import { logError } from "@/lib/logger";
+import { inquirySchema, parseBody } from "@/lib/validation";
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -12,17 +13,26 @@ export async function POST(request: Request) {
   });
   if (rateLimitResponse) return rateLimitResponse;
 
-  try {
-    const body = await request.json();
-    const { productId, name, email, phone, message, selectedColorName, selectedColorHex } = body;
+  const parsed = await parseBody(request, inquirySchema);
+  if ("error" in parsed) return parsed.error;
+  const { productId, name, email, phone, message, selectedColorName, selectedColorHex } =
+    parsed.data;
 
-    if (!productId || !name || !email || !message) {
-      return NextResponse.json({ error: "Моля, попълнете всички задължителни полета." }, { status: 400 });
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { name: true },
+    });
+    if (!product) {
+      return NextResponse.json(
+        { error: "Продуктът не е намерен." },
+        { status: 404 }
+      );
     }
 
     const inquiry = await prisma.inquiry.create({
       data: {
-        productId: parseInt(productId),
+        productId,
         name,
         email,
         phone: phone || null,
@@ -32,16 +42,9 @@ export async function POST(request: Request) {
       },
     });
 
-    // Fetch product info for the email
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(productId) },
-      select: { name: true },
-    });
-
-    // Send email notification (non-blocking)
     sendInquiryNotification(
-      { name, email, phone, message },
-      product?.name || `Продукт #${productId}`,
+      { name, email, phone: phone ?? null, message },
+      product.name,
       selectedColorName && selectedColorHex
         ? { name: selectedColorName, hex: selectedColorHex }
         : null

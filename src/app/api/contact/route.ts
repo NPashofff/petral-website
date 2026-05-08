@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sendContactNotification } from "@/lib/email";
 import { logError } from "@/lib/logger";
+import { contactSchema, parseBody } from "@/lib/validation";
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -12,14 +13,11 @@ export async function POST(request: Request) {
   });
   if (rateLimitResponse) return rateLimitResponse;
 
+  const parsed = await parseBody(request, contactSchema);
+  if ("error" in parsed) return parsed.error;
+  const { name, email, phone, message } = parsed.data;
+
   try {
-    const body = await request.json();
-    const { name, email, phone, message } = body;
-
-    if (!name || !email || !message) {
-      return NextResponse.json({ error: "Моля, попълнете всички задължителни полета." }, { status: 400 });
-    }
-
     const contact = await prisma.contact.create({
       data: {
         name,
@@ -29,8 +27,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send email notification (non-blocking)
-    sendContactNotification({ name, email, phone, message }).catch((err) => {
+    sendContactNotification({ name, email, phone: phone ?? null, message }).catch((err) => {
       console.error("Failed to send contact notification email:", err);
     });
 

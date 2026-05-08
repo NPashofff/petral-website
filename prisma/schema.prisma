@@ -31,6 +31,11 @@ model Product {
   createdAt   DateTime  @default(now())
   inquiries   Inquiry[]
   colors      Color[]   @relation("ProductColors")
+  colorImages ProductColorImage[]
+
+  @@index([category, hidden])
+  @@index([brand])
+  @@index([featured])
 }
 
 model Color {
@@ -40,12 +45,27 @@ model Color {
   order     Int       @default(0)
   createdAt DateTime  @default(now())
   products  Product[] @relation("ProductColors")
+  colorImages ProductColorImage[]
+}
+
+model ProductColorImage {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  colorId   Int
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color     Color    @relation(fields: [colorId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, colorId])
+  @@index([colorId])
 }
 
 model Inquiry {
   id                Int      @id @default(autoincrement())
   productId         Int
-  product           Product  @relation(fields: [productId], references: [id])
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   name              String
   email             String
   phone             String?
@@ -53,6 +73,9 @@ model Inquiry {
   selectedColorName String?
   selectedColorHex  String?
   createdAt         DateTime @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
 }
 
 model Contact {
@@ -62,6 +85,8 @@ model Contact {
   phone     String?
   message   String
   createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model SiteContent {
