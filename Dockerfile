@@ -9,14 +9,14 @@ RUN npm ci
 # --- Build ---
 FROM base AS builder
 WORKDIR /app
+# Prisma needs DATABASE_URL set at generate time, but the value is only used at runtime.
+# The real DATABASE_URL is set by entrypoint.sh; this dummy is never read.
+ENV DATABASE_URL=file:./build-dummy.db
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client (no DB connection needed)
 RUN npx prisma generate
-
-# Create empty database with schema for Next.js build
-RUN npx prisma db push
 
 # Compile seed.ts to seed.js for runtime use
 RUN ./node_modules/.bin/esbuild prisma/seed.ts \

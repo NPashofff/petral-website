@@ -4,7 +4,7 @@ test.describe('Full Site Functionality Test', () => {
   test('complete user journey - browse and inquire', async ({ page }) => {
     // 1. Homepage
     await page.goto('/');
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('h1').first()).toBeVisible();
     console.log('✓ Homepage loaded');
 
     // 2. Navigate to catalog
@@ -16,7 +16,7 @@ test.describe('Full Site Functionality Test', () => {
     const firstProduct = page.locator('a[href*="/catalog/"]').first();
     await firstProduct.click();
     await expect(page).toHaveURL(/\/catalog\/\d+/);
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('h1').first()).toBeVisible();
     console.log('✓ Product detail page loaded');
 
     // 4. Check inquiry form is present
@@ -126,7 +126,7 @@ test.describe('Full Site Functionality Test', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     await page.goto('/');
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('h1').first()).toBeVisible();
     console.log('✓ Homepage responsive on mobile');
 
     await page.goto('/catalog');
@@ -135,7 +135,7 @@ test.describe('Full Site Functionality Test', () => {
     console.log('✓ Catalog responsive on mobile');
 
     await products.first().click();
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('h1').first()).toBeVisible();
     console.log('✓ Product detail responsive on mobile');
   });
 });
