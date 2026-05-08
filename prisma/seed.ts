@@ -43,16 +43,6 @@ const siteContentDefaults: Record<string, string> = {
   color_primary_dark: "#0D3B12",
 };
 
-const defaultColors: { name: string; hex: string; order: number }[] = [
-  { name: "Черен", hex: "#000000", order: 1 },
-  { name: "Бял", hex: "#FFFFFF", order: 2 },
-  { name: "Червен", hex: "#D32F2F", order: 3 },
-  { name: "Зелен", hex: "#2E7D32", order: 4 },
-  { name: "Син", hex: "#1976D2", order: 5 },
-  { name: "Сив", hex: "#757575", order: 6 },
-  { name: "Жълт", hex: "#FBC02D", order: 7 },
-];
-
 async function main() {
   // Site content — upsert only creates missing keys, never overwrites existing
   let createdContent = 0;
@@ -69,24 +59,20 @@ async function main() {
       : "All content entries already exist."
   );
 
-  // Default color palette — only seed if the palette is empty
-  const existingColors = await prisma.color.count();
-  if (existingColors === 0) {
-    for (const color of defaultColors) {
-      await prisma.color.create({ data: color });
-    }
-    console.log(`Seeded ${defaultColors.length} default colors.`);
-  } else {
-    console.log(`Colors already exist (${existingColors}). Skipping palette seed.`);
-  }
-
   // Default admin
   const existingAdmin = await prisma.admin.findUnique({
     where: { username: "admin" },
   });
 
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash("petral2024", 10);
+    const envPassword = process.env.INITIAL_ADMIN_PASSWORD;
+    if (!envPassword && process.env.NODE_ENV === "production") {
+      throw new Error(
+        "INITIAL_ADMIN_PASSWORD environment variable is required to bootstrap the default admin in production."
+      );
+    }
+    const password = envPassword || "petral2024";
+    const hashedPassword = await bcrypt.hash(password, 10);
     await prisma.admin.create({
       data: {
         username: "admin",
@@ -94,7 +80,14 @@ async function main() {
         name: "Администратор",
       },
     });
-    console.log("Created default admin (admin / petral2024).");
+    if (envPassword) {
+      console.log("Created default admin (admin) with INITIAL_ADMIN_PASSWORD.");
+    } else {
+      console.log(
+        "Created default admin (admin / petral2024). " +
+          "Change the password immediately via /admin/settings."
+      );
+    }
   } else {
     console.log("Default admin already exists. Skipping.");
   }

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { logError } from "@/lib/logger";
-
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {

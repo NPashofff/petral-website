@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import fs from "fs/promises";
 import path from "path";
 import JSZip from "jszip";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 import { getUploadsDir } from "@/lib/uploads";
+import { normalizeImagesString } from "@/lib/images";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,9 +14,8 @@ export const dynamic = "force-dynamic";
 type Scope = "db" | "inquiries" | "uploads";
 
 async function requireAdmin() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("admin_session");
-  return !!session?.value;
+  const session = await getSession();
+  return !!session;
 }
 
 async function readJson<T>(zip: JSZip, filename: string): Promise<T | null> {
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
               viscosity: p.viscosity ?? null,
               volumeValue: p.volumeValue ?? null,
               volumeUnit: p.volumeUnit ?? null,
-              images: p.images,
+              images: normalizeImagesString(p.images),
               address: p.address,
               lat: p.lat,
               lon: p.lon,

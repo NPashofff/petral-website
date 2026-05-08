@@ -3,7 +3,17 @@ import { NextRequest, NextResponse } from "next/server";
 const COOKIE_NAME = "admin_session";
 
 function getSecret(): string {
-  return process.env.ADMIN_SECRET || "petral-default-secret-change-me";
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "ADMIN_SECRET environment variable is required in production. " +
+          "Set it to a long random string before starting the app."
+      );
+    }
+    return "petral-default-secret-change-me";
+  }
+  return secret;
 }
 
 async function verifyToken(token: string): Promise<boolean> {

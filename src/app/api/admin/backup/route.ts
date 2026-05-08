@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import fs from "fs/promises";
 import path from "path";
 import JSZip from "jszip";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import { getUploadsDir } from "@/lib/uploads";
 
 export const runtime = "nodejs";
@@ -12,9 +12,8 @@ export const dynamic = "force-dynamic";
 type Scope = "db" | "inquiries" | "uploads";
 
 async function requireAdmin() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("admin_session");
-  return !!session?.value;
+  const session = await getSession();
+  return !!session;
 }
 
 async function addUploadsToZip(zip: JSZip) {

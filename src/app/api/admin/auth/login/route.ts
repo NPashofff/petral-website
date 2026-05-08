@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { logError } from "@/lib/logger";
-
-const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);

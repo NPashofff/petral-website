@@ -1,18 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 
 async function requireAdmin() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("admin_session");
-  return !!session?.value;
+  const session = await getSession();
+  return !!session;
 }
 
 export async function GET() {
   const colors = await prisma.color.findMany({
     orderBy: [{ order: "asc" }, { name: "asc" }],
+    include: {
+      _count: {
+        select: { products: true },
+      },
+    },
   });
-  return NextResponse.json(colors);
+  return NextResponse.json(
+    colors.map((color) => ({
+      id: color.id,
+      name: color.name,
+      hex: color.hex,
+      order: color.order,
+      productCount: color._count.products,
+      isUsed: color._count.products > 0,
+    }))
+  );
 }
 
 export async function POST(req: NextRequest) {

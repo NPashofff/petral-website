@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import { detectCurrency, parseBrandFromFilename, parsePackage, parseViscosity, slugify } from "@/lib/oil-import";
 import { bgnToEur } from "@/lib/currency";
 
@@ -10,6 +11,11 @@ type ImportError = { row: number; name: string; reason: string };
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 interface RouteContext {
@@ -8,9 +8,8 @@ interface RouteContext {
 }
 
 async function requireAdmin() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get("admin_session");
-  return !!session?.value;
+  const session = await getSession();
+  return !!session;
 }
 
 export async function PUT(req: NextRequest, context: RouteContext) {
