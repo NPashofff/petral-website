@@ -29,8 +29,10 @@ interface ProductFormData {
   lon: number | null;
   featured: boolean;
   hidden: boolean;
+  sortOrder: number;
   colorIds: number[];
   colorImageMap: Record<number, string>;
+  colorPriceMap: Record<number, number | null>;
 }
 
 interface ProductFormProps {
@@ -65,8 +67,10 @@ const defaultData: ProductFormData = {
   lon: null,
   featured: false,
   hidden: false,
+  sortOrder: 0,
   colorIds: [],
   colorImageMap: {},
+  colorPriceMap: {},
 };
 
 export default function ProductForm({ initialData, productId }: ProductFormProps) {
@@ -76,6 +80,7 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
     ...(initialData || {}),
     colorIds: initialData?.colorIds ?? [],
     colorImageMap: initialData?.colorImageMap ?? {},
+    colorPriceMap: initialData?.colorPriceMap ?? {},
   }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -99,15 +104,21 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
   }, []);
 
   const toggleColor = (id: number) => {
-    setForm((prev) => ({
-      ...prev,
-      colorIds: prev.colorIds.includes(id)
-        ? prev.colorIds.filter((x) => x !== id)
-        : [...prev.colorIds, id],
-      colorImageMap: prev.colorIds.includes(id)
-        ? Object.fromEntries(Object.entries(prev.colorImageMap).filter(([key]) => Number(key) !== id))
-        : prev.colorImageMap,
-    }));
+    setForm((prev) => {
+      const removing = prev.colorIds.includes(id);
+      return {
+        ...prev,
+        colorIds: removing
+          ? prev.colorIds.filter((x) => x !== id)
+          : [...prev.colorIds, id],
+        colorImageMap: removing
+          ? Object.fromEntries(Object.entries(prev.colorImageMap).filter(([key]) => Number(key) !== id))
+          : prev.colorImageMap,
+        colorPriceMap: removing
+          ? Object.fromEntries(Object.entries(prev.colorPriceMap).filter(([key]) => Number(key) !== id))
+          : prev.colorPriceMap,
+      };
+    });
   };
 
   const setColorImage = (colorId: number, imageUrl: string) => {
@@ -116,6 +127,16 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
       colorImageMap: {
         ...prev.colorImageMap,
         [colorId]: imageUrl,
+      },
+    }));
+  };
+
+  const setColorPrice = (colorId: number, price: number | null) => {
+    setForm((prev) => ({
+      ...prev,
+      colorPriceMap: {
+        ...prev.colorPriceMap,
+        [colorId]: price,
       },
     }));
   };
@@ -161,16 +182,38 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
   const imageList = parseImages(form.images);
 
   const setImages = (imgs: string[]) => {
-    setForm((prev) => ({ ...prev, images: serializeImages(imgs) }));
+    // #25: dedupe URLs so two identical image URLs can't collide as React keys
+    // (the colorImageMap <select> options are keyed by URL).
+    const unique = Array.from(new Set(imgs));
+    setForm((prev) => ({ ...prev, images: serializeImages(unique) }));
   };
 
+  // Bulgarian Cyrillic → Latin transliteration so Cyrillic product names yield a
+  // valid, non-empty slug matching the server's productSchema regex.
+  const CYRILLIC_MAP: Record<string, string> = {
+    а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ж: "zh", з: "z",
+    и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p",
+    р: "r", с: "s", т: "t", у: "u", ф: "f", х: "h", ц: "ts", ч: "ch",
+    ш: "sh", щ: "sht", ъ: "a", ь: "y", ю: "yu", я: "ya",
+  };
+
+  const transliterate = (input: string) =>
+    input.replace(/[Ѐ-ӿ]/g, (ch) => {
+      const lower = ch.toLowerCase();
+      const mapped = CYRILLIC_MAP[lower];
+      if (mapped === undefined) return "";
+      return ch === lower ? mapped : mapped.charAt(0).toUpperCase() + mapped.slice(1);
+    });
+
   const generateSlug = (name: string) => {
-    return name
+    const slug = transliterate(name)
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, "")
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
-      .trim();
+      .replace(/^-+|-+$/g, "");
+    // Never return empty for a non-empty name (edge case: name was all symbols).
+    return slug || (name.trim() ? "produkt" : "");
   };
 
   const handleNameChange = (name: string) => {
@@ -219,7 +262,16 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
   };
 
   const removeImage = (index: number) => {
-    setImages(imageList.filter((_, i) => i !== index));
+    const removedUrl = imageList[index];
+    setForm((prev) => {
+      const nextImages = parseImages(prev.images).filter((_, i) => i !== index);
+      // #26: drop any per-color image link that pointed at the removed image so
+      // a color doesn't reference a deleted URL. Per-color prices stay untouched.
+      const colorImageMap = Object.fromEntries(
+        Object.entries(prev.colorImageMap).filter(([, url]) => url !== removedUrl)
+      );
+      return { ...prev, images: serializeImages(nextImages), colorImageMap };
+    });
   };
 
   const setAsDefault = (index: number) => {
@@ -397,7 +449,14 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
               value={form.year ?? ""}
               onChange={(e) => {
                 const val = e.target.value;
-                setForm({ ...form, year: val === "" ? null : parseInt(val) || null });
+                if (val === "") {
+                  setForm({ ...form, year: null });
+                } else {
+                  const n = parseInt(val, 10);
+                  // #24: keep 0 (parseInt(val)||null would drop it) and reject
+                  // non-numeric input like "1990abc" by requiring a finite number.
+                  setForm({ ...form, year: Number.isFinite(n) ? n : null });
+                }
               }}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
@@ -603,7 +662,12 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
         {form.colorIds.length > 0 && (
           <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700">
-              Снимка към избран цвят
+              Снимка и цена към избран цвят
+            </div>
+            <div className="hidden md:grid grid-cols-[160px_1fr_150px] gap-3 px-3 py-2 border-t border-gray-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <span>Цвят</span>
+              <span>Снимка</span>
+              <span>Цена (€)</span>
             </div>
             <div className="divide-y divide-gray-100">
               {form.colorIds.map((colorId) => {
@@ -611,7 +675,7 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
                 if (!color) return null;
 
                 return (
-                  <div key={colorId} className="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-3 p-3 items-center">
+                  <div key={colorId} className="grid grid-cols-1 md:grid-cols-[160px_1fr_150px] gap-3 p-3 md:items-center">
                     <div className="flex items-center gap-2 text-sm font-medium text-gray-800">
                       <span
                         className="inline-block w-5 h-5 rounded-full border border-gray-300"
@@ -619,26 +683,49 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
                       />
                       <span>{color.name}</span>
                     </div>
-                    {imageList.length === 0 ? (
-                      <p className="text-sm text-gray-500">Първо добавете снимки към продукта.</p>
-                    ) : (
-                      <select
-                        value={form.colorImageMap[colorId] ?? ""}
-                        onChange={(e) => setColorImage(colorId, e.target.value)}
+                    <div>
+                      <span className="md:hidden block text-xs font-medium text-gray-500 mb-1">Снимка</span>
+                      {imageList.length === 0 ? (
+                        <p className="text-sm text-gray-500">Първо добавете снимки за връзка със снимка.</p>
+                      ) : (
+                        <select
+                          value={form.colorImageMap[colorId] ?? ""}
+                          onChange={(e) => setColorImage(colorId, e.target.value)}
+                          aria-label={`Снимка за ${color.name}`}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                          <option value="">Без конкретна снимка</option>
+                          {imageList.map((img, i) => (
+                            <option key={i} value={img}>
+                              Снимка {i + 1}{i === 0 ? " (главна)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                    <div>
+                      <span className="md:hidden block text-xs font-medium text-gray-500 mb-1">Цена (€)</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={form.colorPriceMap[colorId] ?? ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setColorPrice(colorId, val === "" ? null : parseFloat(val));
+                        }}
+                        placeholder="напр. 6500"
+                        aria-label={`Цена за ${color.name} (€)`}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        <option value="">Без конкретна снимка</option>
-                        {imageList.map((img, i) => (
-                          <option key={img} value={img}>
-                            Снимка {i + 1}{i === 0 ? " (главна)" : ""}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                      />
+                    </div>
                   </div>
                 );
               })}
             </div>
+            <p className="bg-gray-50 px-3 py-2 text-xs text-gray-500">
+              Цената (€) за всеки цвят е незадължителна — празно поле означава базовата цена на продукта.
+            </p>
           </div>
         )}
       </section>
@@ -652,6 +739,29 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
         </div>
 
         <div className="space-y-3">
+          <div>
+            <label htmlFor="product-sort-order" className="block text-sm font-medium text-gray-700 mb-1">
+              Подредба (0–99)
+            </label>
+            <input
+              id="product-sort-order"
+              type="number"
+              min={0}
+              max={99}
+              step={1}
+              value={form.sortOrder}
+              onChange={(e) => {
+                const val = e.target.value;
+                const n = val === "" ? 0 : Math.floor(parseInt(val, 10));
+                setForm({ ...form, sortOrder: Number.isFinite(n) ? Math.min(99, Math.max(0, n)) : 0 });
+              }}
+              className="w-32 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              По-голямо число = по-напред в каталога. 0 = най-отзад.
+            </p>
+          </div>
+
           <div className="flex items-start gap-3">
             <input
               type="checkbox"

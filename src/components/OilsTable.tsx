@@ -87,8 +87,8 @@ export default function OilsTable({ rows }: { rows: OilRow[] }) {
               <Th onClick={() => onSort("brand")} arrow={arrow("brand")}>Марка</Th>
               <Th onClick={() => onSort("viscosity")} arrow={arrow("viscosity")}>Вискозитет</Th>
               <Th onClick={() => onSort("package")} arrow={arrow("package")} align="right">Опаковка</Th>
-              <Th onClick={() => onSort("price")} arrow={arrow("price")} align="right">Цена/л(кг)</Th>
-              <Th onClick={() => onSort("total")} arrow={arrow("total")} align="right">Обща цена</Th>
+              <Th onClick={() => onSort("price")} arrow={arrow("price")} align="right">Цена/л(кг) без ДДС</Th>
+              <Th onClick={() => onSort("total")} arrow={arrow("total")} align="right">Обща цена без ДДС</Th>
               <th className="px-4 py-3 w-10"></th>
             </tr>
           </thead>

@@ -5,17 +5,18 @@ const COOKIE_NAME = "admin_session";
 function getSecret(): string {
   const secret = process.env.ADMIN_SECRET;
   if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "ADMIN_SECRET environment variable is required in production. " +
-          "Set it to a long random string before starting the app."
-      );
-    }
-    return "petral-default-secret-change-me";
+    throw new Error(
+      "ADMIN_SECRET environment variable is required. " +
+        "Set it to a long random string before starting the app."
+    );
   }
   return secret;
 }
 
+// NOTE: this runs on the EDGE runtime — it must stay stateless and must NOT
+// import Prisma/DB. It validates only the HMAC signature and the token expiry
+// (#4). The DB-backed sessionVersion check (#5) lives in the Node-side
+// getSession() (src/lib/auth.ts), which all admin API routes go through.
 async function verifyToken(token: string): Promise<boolean> {
   const [encodedPayload, signature] = token.split(".");
   if (!encodedPayload || !signature) return false;
@@ -36,7 +37,20 @@ async function verifyToken(token: string): Promise<boolean> {
     .replace(/\//g, "_")
     .replace(/=/g, "");
 
-  return signature === expectedSignature;
+  if (signature !== expectedSignature) return false;
+
+  // #4: reject expired tokens (and the old format that lacks an exp field).
+  try {
+    const parsed = JSON.parse(payload) as { iat?: number; exp?: number };
+    if (typeof parsed.exp !== "number" || typeof parsed.iat !== "number") {
+      return false;
+    }
+    if (Date.now() >= parsed.exp) return false;
+  } catch {
+    return false;
+  }
+
+  return true;
 }
 
 export async function middleware(request: NextRequest) {

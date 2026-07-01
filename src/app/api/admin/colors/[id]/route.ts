@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 import { logError } from "@/lib/logger";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-async function requireAdmin() {
-  const session = await getSession();
-  return !!session;
-}
-
 export async function PUT(req: NextRequest, context: RouteContext) {
-  if (!(await requireAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const csrf = requireSameOrigin(req);
+  if (csrf) return csrf;
+
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
   try {
     const { id } = await context.params;
@@ -54,10 +52,12 @@ export async function PUT(req: NextRequest, context: RouteContext) {
   }
 }
 
-export async function DELETE(_req: NextRequest, context: RouteContext) {
-  if (!(await requireAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  const csrf = requireSameOrigin(req);
+  if (csrf) return csrf;
+
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
   try {
     const { id } = await context.params;

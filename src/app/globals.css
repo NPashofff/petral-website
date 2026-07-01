@@ -28,7 +28,8 @@
 }
 
 /* Side-by-side text+image sections */
-.product-description div[style*="max-width: 50%"] img {
+.product-description div[style*="max-width: 50%"] img,
+.product-description div[style*="max-width:50%"] img {
   max-width: 100% !important;
   border-radius: 0.5rem;
 }

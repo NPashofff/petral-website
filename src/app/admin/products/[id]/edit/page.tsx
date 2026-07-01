@@ -12,7 +12,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     where: { id: parseInt(id) },
     include: {
       colors: { select: { id: true } },
-      colorImages: { select: { colorId: true, imageUrl: true } },
+      colorImages: { select: { colorId: true, imageUrl: true, price: true } },
     },
   });
 
@@ -38,9 +38,13 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     lon: product.lon ?? null,
     featured: product.featured,
     hidden: product.hidden,
+    sortOrder: product.sortOrder,
     colorIds: product.colors.map((c) => c.id),
     colorImageMap: Object.fromEntries(
       product.colorImages.map((row) => [row.colorId, row.imageUrl])
+    ),
+    colorPriceMap: Object.fromEntries(
+      product.colorImages.filter((row) => row.price != null).map((row) => [row.colorId, row.price])
     ),
   };
 

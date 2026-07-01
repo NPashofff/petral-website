@@ -1,5 +1,23 @@
 import { NextResponse } from "next/server";
 
+/**
+ * #29 — LIMITATION: this is a per-process, in-memory rate limiter.
+ *
+ *  - State lives in the module-level `store` Map below, so every limit counter
+ *    RESETS WHENEVER THE PROCESS RESTARTS (deploy, crash, container restart).
+ *  - It is NOT shared across instances. If the app is ever scaled to more than
+ *    one Node process / replica, each one keeps its own independent buckets, so
+ *    the effective limit is multiplied by the number of instances and an
+ *    attacker spread across instances can exceed the intended per-IP cap.
+ *
+ * This is acceptable for the current single-container TrueNAS deployment.
+ *
+ * TODO: back this with a shared store (e.g. Redis / Upstash, or a SQLite/DB
+ * table keyed by `${prefix}:${identifier}` with a sliding window) before
+ * running more than one instance, so limits are durable across restarts and
+ * enforced globally rather than per-process.
+ */
+
 interface RateLimitEntry {
   timestamps: number[];
 }
@@ -25,10 +43,37 @@ function cleanup(windowMs: number) {
   }
 }
 
+/**
+ * #6 — Derive the client IP without blindly trusting a client-spoofable
+ * X-Forwarded-For. A malicious client can prepend arbitrary values to XFF, so
+ * taking the *first* hop lets an attacker forge a fresh IP per request and slip
+ * past a per-IP limit.
+ *
+ * We trust exactly ONE reverse-proxy hop in front of the app (the TrueNAS
+ * deployment sits behind a single proxy). XFF is appended left-to-right, so the
+ * value our trusted proxy wrote is the LAST entry — that is the real client as
+ * seen by our edge. Prefer the platform-provided IPs first; fall back to the
+ * last XFF hop; otherwise "unknown".
+ */
+const TRUSTED_PROXY_HOPS = 1;
+
 export function getClientIp(request: Request): string {
+  // Server/platform-provided client IP — not client-spoofable.
+  const real = request.headers.get("x-real-ip");
+  if (real && real.trim()) return real.trim();
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
-    return forwarded.split(",")[0].trim();
+    const hops = forwarded
+      .split(",")
+      .map((h) => h.trim())
+      .filter(Boolean);
+    if (hops.length > 0) {
+      // Count TRUSTED_PROXY_HOPS in from the right; clamp to the leftmost entry
+      // when there are fewer hops than expected.
+      const idx = Math.max(0, hops.length - TRUSTED_PROXY_HOPS);
+      return hops[idx];
+    }
   }
   return "unknown";
 }
@@ -38,17 +83,36 @@ interface RateLimitOptions {
   windowMs: number;
 }
 
+function tooManyRequests(retryAfter: number): NextResponse {
+  return NextResponse.json(
+    { error: "Твърде много заявки. Моля, опитайте по-късно." },
+    {
+      status: 429,
+      headers: { "Retry-After": String(Math.max(1, retryAfter)) },
+    }
+  );
+}
+
 export function checkRateLimit(
-  ip: string,
+  identifier: string,
   prefix: string,
   { maxRequests, windowMs }: RateLimitOptions
 ): NextResponse | null {
-  // Skip rate limiting for local development (loopback addresses)
-  if (ip === "unknown" || ip === "127.0.0.1" || ip === "::1") return null;
+  // Loopback (local dev) is never rate-limited.
+  if (identifier === "127.0.0.1" || identifier === "::1") return null;
+
+  // #6: when we can't determine a client identifier, FAIL CLOSED in production
+  // (treat it as a single bucket so an attacker can't bypass the limit by
+  // forcing "unknown"). In dev/test we keep the old skip behaviour so local
+  // requests without proxy headers aren't throttled.
+  if (identifier === "unknown") {
+    if (process.env.NODE_ENV !== "production") return null;
+    // fall through using a shared "unknown" bucket
+  }
 
   cleanup(windowMs);
 
-  const key = `${prefix}:${ip}`;
+  const key = `${prefix}:${identifier}`;
   const now = Date.now();
   const cutoff = now - windowMs;
 
@@ -58,13 +122,7 @@ export function checkRateLimit(
   if (entry.timestamps.length >= maxRequests) {
     const oldestInWindow = entry.timestamps[0];
     const retryAfter = Math.ceil((oldestInWindow + windowMs - now) / 1000);
-    return NextResponse.json(
-      { error: "Твърде много заявки. Моля, опитайте по-късно." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(retryAfter) },
-      }
-    );
+    return tooManyRequests(retryAfter);
   }
 
   entry.timestamps.push(now);

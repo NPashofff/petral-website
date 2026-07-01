@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import ImageGallery from "@/components/ImageGallery";
 import InquiryForm from "@/components/InquiryForm";
+import ProductPrice from "@/components/ProductPrice";
 import ProductMapLoader from "@/components/ProductMapLoader";
 import type { Metadata } from "next";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
@@ -10,6 +11,7 @@ import { getBrandLogoUrl } from "@/lib/brand-logo";
 import { formatPrice } from "@/lib/currency";
 import { absoluteUrl } from "@/lib/site";
 import { parseImages } from "@/lib/images";
+import { sanitizeProductHtml } from "@/lib/sanitize";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -17,6 +19,17 @@ interface ProductPageProps {
 
 function plainText(html: string, max = 160): string {
   return html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, max);
+}
+
+/**
+ * Escape a JSON string for safe embedding inside an inline <script> element so
+ * a value such as `</script><script>...` cannot break out of the tag.
+ */
+function jsonLdSafe(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/&/g, "\\u0026")
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e");
 }
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
@@ -114,6 +127,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
     ...color,
     imageUrl: colorImages.find((item) => item.colorId === color.id)?.imageUrl ?? null,
   }));
+  const colorPriceById = new Map(product.colorImages.map((ci) => [ci.colorId, ci.price ?? null]));
+  const colorPrices = product.colors.map((color) => ({
+    colorId: color.id,
+    price: colorPriceById.get(color.id) ?? null,
+  }));
   const totalPrice =
     isOil && product.price != null && product.volumeValue != null
       ? product.price * product.volumeValue
@@ -141,7 +159,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdSafe(jsonLd) }}
       />
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-gray-500">
@@ -173,18 +191,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   ? formatPrice(product.price, { unit: product.volumeUnit ?? null })
                   : "Цена при запитване"}
               </p>
+              {product.price != null && (
+                <span className="block text-sm font-normal text-gray-500 mt-0.5">без ДДС</span>
+              )}
               {totalPrice != null && (
                 <p className="text-sm text-gray-600 mt-1">
                   Обща цена за опаковка ({product.volumeValue}{product.volumeUnit}):{" "}
-                  <strong>{formatPrice(totalPrice)}</strong>
+                  <strong>{formatPrice(totalPrice)}</strong> без ДДС
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-3xl font-bold text-[var(--color-primary)] mt-4">
-              {product.price != null ? formatPrice(product.price) : "Цена при запитване"}
-            </p>
+            <ProductPrice basePrice={product.price} colorPrices={colorPrices} />
           )}
+
+          <p className="text-sm text-gray-600 mt-2">
+            Цената може да варира според избора на цвят и допълнителни опции
+          </p>
 
           {/* Specs table */}
           <div className="mt-8">
@@ -213,7 +236,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="mt-12 overflow-hidden">
         <div
           className="product-description text-gray-700 leading-relaxed max-w-none [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4 [&_li]:mb-1 [&_table]:w-full [&_table]:border-collapse [&_table]:mb-6 [&_table]:text-sm [&_td]:border [&_td]:border-gray-200 [&_td]:px-4 [&_td]:py-2 [&_th]:border [&_th]:border-gray-200 [&_th]:px-4 [&_th]:py-2 [&_th]:bg-gray-50 [&_th]:font-semibold [&_th]:text-left [&_a]:text-green-700 [&_a]:underline"
-          dangerouslySetInnerHTML={{ __html: product.description }}
+          dangerouslySetInnerHTML={{ __html: sanitizeProductHtml(product.description) }}
         />
       </div>
 
@@ -230,6 +253,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <div className="mt-12">
         <InquiryForm productId={product.id} productName={product.name} colors={inquiryColors} />
       </div>
+
+      <p className="text-center text-sm text-gray-500 mt-8">Снимките са илюстративни !</p>
     </div>
   );
 }

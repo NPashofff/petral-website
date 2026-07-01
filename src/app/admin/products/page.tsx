@@ -1,13 +1,17 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import DeleteProductButton from "./DeleteProductButton";
+import DeleteRowButton from "@/components/DeleteRowButton";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 import { formatPrice } from "@/lib/currency";
 
+// #28: admin listing must always reflect live DB state (just-edited products,
+// hidden flags, sort order), so it stays dynamic rather than cached.
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
-  const products = await prisma.product.findMany({ orderBy: { createdAt: "desc" } });
+  const products = await prisma.product.findMany({
+    orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
+  });
 
   return (
     <>
@@ -34,6 +38,7 @@ export default async function AdminProductsPage() {
           <thead className="bg-gray-50 text-gray-600">
             <tr>
               <th className="text-left px-4 py-3 font-medium">ID</th>
+              <th className="text-center px-4 py-3 font-medium" title="Подредба в каталога (0–99)">№</th>
               <th className="text-left px-4 py-3 font-medium">Име</th>
               <th className="text-left px-4 py-3 font-medium">Категория</th>
               <th className="text-left px-4 py-3 font-medium">Марка</th>
@@ -55,6 +60,7 @@ export default async function AdminProductsPage() {
               return (
                 <tr key={product.id} className={`hover:bg-gray-50 ${product.hidden ? "opacity-50" : ""}`}>
                   <td className="px-4 py-3 text-gray-500">{product.id}</td>
+                  <td className="px-4 py-3 text-center font-semibold text-gray-700">{product.sortOrder}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs font-semibold px-2 py-1 rounded-full ${categoryBadgeClass(product.category)}`}>
@@ -72,7 +78,11 @@ export default async function AdminProductsPage() {
                     >
                       Редактирай
                     </Link>
-                    <DeleteProductButton productId={product.id} productName={product.name} />
+                    <DeleteRowButton
+                      endpoint={`/api/admin/products/${product.id}`}
+                      confirmTitle="Изтриване на продукт"
+                      confirmMessage={`Сигурни ли сте, че искате да изтриете "${product.name}"? Действието е необратимо.`}
+                    />
                   </td>
                 </tr>
               );

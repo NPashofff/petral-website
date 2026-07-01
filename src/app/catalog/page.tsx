@@ -37,7 +37,7 @@ function buildQueryString(params: Record<string, string | undefined>): string {
 async function ProductList({ searchParams }: CatalogPageProps) {
   const params = await searchParams;
   const { category, brand, minPrice, maxPrice, q } = params;
-  const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
+  const requestedPage = Math.max(1, parseInt(params.page || "1", 10) || 1);
 
   const where: Prisma.ProductWhereInput = { category: { not: "OILS" }, hidden: false };
   if (category && category !== "OILS") where.category = category;
@@ -56,15 +56,7 @@ async function ProductList({ searchParams }: CatalogPageProps) {
     ];
   }
 
-  const [total, products] = await prisma.$transaction([
-    prisma.product.count({ where }),
-    prisma.product.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-  ]);
+  const total = await prisma.product.count({ where });
 
   if (total === 0) {
     return (
@@ -77,6 +69,18 @@ async function ProductList({ searchParams }: CatalogPageProps) {
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const baseQuery = { category, brand, minPrice, maxPrice, q };
+
+  // #14: clamp an out-of-range page to the last page so the grid is never empty
+  // while the "стр. N от M" counter shows a non-empty page count.
+  const page = Math.min(requestedPage, totalPages);
+
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+  });
+
   const buildHref = (target: number) =>
     `/catalog${buildQueryString({ ...baseQuery, page: target > 1 ? String(target) : undefined })}`;
 

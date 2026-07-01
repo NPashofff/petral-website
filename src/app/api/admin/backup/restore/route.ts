@@ -3,20 +3,30 @@ import fs from "fs/promises";
 import path from "path";
 import JSZip from "jszip";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 import { logError } from "@/lib/logger";
 import { getUploadsDir } from "@/lib/uploads";
 import { normalizeImagesString } from "@/lib/images";
+import {
+  detectImageType,
+  ALLOWED_UPLOAD_EXTENSIONS,
+} from "@/lib/image-validation";
+import { revalidateTag } from "next/cache";
+import { SITE_CONTENT_TAG } from "@/lib/content";
+import { revalidateProductPaths } from "@/lib/revalidate";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type Scope = "db" | "inquiries" | "uploads";
 
-async function requireAdmin() {
-  const session = await getSession();
-  return !!session;
-}
+// Caps for restoring the "uploads" scope of a backup archive.
+const MAX_UPLOAD_ENTRIES = 5000;
+const MAX_UPLOAD_FILE_BYTES = 10 * 1024 * 1024; // 10MB per file
+const MAX_UPLOAD_TOTAL_BYTES = 500 * 1024 * 1024; // 500MB total
+
+class RestoreValidationError extends Error {}
 
 async function readJson<T>(zip: JSZip, filename: string): Promise<T | null> {
   const file = zip.file(filename);
@@ -28,11 +38,11 @@ async function readJson<T>(zip: JSZip, filename: string): Promise<T | null> {
 async function writeUploadsFromZip(zip: JSZip): Promise<number> {
   const uploadsDir = getUploadsDir();
   await fs.mkdir(uploadsDir, { recursive: true });
+  const root = path.resolve(uploadsDir);
 
   const uploadFiles = zip.folder("uploads");
   if (!uploadFiles) return 0;
 
-  let count = 0;
   const entries: Array<{ name: string; file: JSZip.JSZipObject }> = [];
   zip.forEach((relativePath, file) => {
     if (relativePath.startsWith("uploads/") && !file.dir) {
@@ -40,19 +50,64 @@ async function writeUploadsFromZip(zip: JSZip): Promise<number> {
     }
   });
 
+  // Max entry count guard (zip bomb / abuse).
+  if (entries.length > MAX_UPLOAD_ENTRIES) {
+    throw new RestoreValidationError(
+      `Архивът съдържа твърде много файлове (${entries.length}).`
+    );
+  }
+
+  let count = 0;
+  let totalBytes = 0;
+
   for (const { name, file } of entries) {
-    if (!name || name.includes("/") || name.includes("..")) continue;
+    // Zip-slip / path-traversal guard.
+    if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) {
+      throw new RestoreValidationError(`Невалидно име на файл в архива: "${name}".`);
+    }
+
+    // Extension whitelist.
+    const ext = path.extname(name).toLowerCase();
+    if (!(ALLOWED_UPLOAD_EXTENSIONS as readonly string[]).includes(ext)) {
+      throw new RestoreValidationError(`Неразрешен тип файл в архива: "${name}".`);
+    }
+
     const content = await file.async("nodebuffer");
-    await fs.writeFile(path.join(uploadsDir, name), content);
+
+    // Per-file size cap.
+    if (content.length > MAX_UPLOAD_FILE_BYTES) {
+      throw new RestoreValidationError(`Файл в архива е твърде голям: "${name}".`);
+    }
+    totalBytes += content.length;
+    if (totalBytes > MAX_UPLOAD_TOTAL_BYTES) {
+      throw new RestoreValidationError("Архивът надвишава максималния общ размер.");
+    }
+
+    // Magic-byte check: contents must actually be a supported raster image.
+    if (!detectImageType(content)) {
+      throw new RestoreValidationError(
+        `Съдържанието на "${name}" не е валидно изображение.`
+      );
+    }
+
+    // Defense in depth: ensure the resolved path stays inside uploadsDir.
+    const dest = path.resolve(path.join(uploadsDir, name));
+    if (dest !== root && !dest.startsWith(root + path.sep)) {
+      throw new RestoreValidationError(`Невалиден път на файл в архива: "${name}".`);
+    }
+
+    await fs.writeFile(dest, content);
     count++;
   }
   return count;
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const csrf = requireSameOrigin(req);
+  if (csrf) return csrf;
+
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
   try {
     const formData = await req.formData();
@@ -117,33 +172,50 @@ export async function POST(req: NextRequest) {
       const siteContent = (await readJson<
         Array<{ key: string; value: string; updatedAt: string }>
       >(zip, "data/site_content.json")) || [];
-      const admins = (await readJson<
-        Array<{ id: number; username: string; password: string; name: string; createdAt: string }>
-      >(zip, "data/admins.json")) || [];
+      // #20: admin accounts (and password hashes) are NOT part of the backup
+      // anymore and are never restored. Existing admins are left untouched so a
+      // restore cannot wipe the only login or reintroduce stale credentials.
       const contacts = (await readJson<
         Array<{ id: number; name: string; email: string; phone: string | null; message: string; createdAt: string }>
       >(zip, "data/contacts.json")) || [];
+      // #23: per-color prices/images (ProductColorImage). Absent in pre-fix
+      // backups → [] (backward compatible), so those simply restore no color rows.
+      const colorImages = (await readJson<
+        Array<{
+          id: number;
+          productId: number;
+          colorId: number;
+          imageUrl: string;
+          price: number | null;
+          createdAt: string;
+          updatedAt: string;
+        }>
+      >(zip, "data/color_images.json")) || [];
 
       await prisma.$transaction(async (tx) => {
         // Order matters: inquiries reference products; products reference colors via link table.
+        // #20: admins are intentionally NOT wiped or restored — they are
+        // preserved across a restore so login is never lost.
         await tx.inquiry.deleteMany({});
         await tx.product.deleteMany({});
         await tx.color.deleteMany({});
         await tx.siteContent.deleteMany({});
-        await tx.admin.deleteMany({});
         await tx.contact.deleteMany({});
 
-        for (const c of colors) {
-          await tx.color.create({
-            data: {
+        // #23: flat tables (no relation writes) go through createMany.
+        if (colors.length > 0) {
+          await tx.color.createMany({
+            data: colors.map((c) => ({
               id: c.id,
               name: c.name,
               hex: c.hex,
               order: c.order,
               createdAt: new Date(c.createdAt),
-            },
+            })),
           });
         }
+        // Products keep per-row create: each needs its colors.connect relation,
+        // which createMany cannot express.
         for (const p of products) {
           await tx.product.create({
             data: {
@@ -172,40 +244,48 @@ export async function POST(req: NextRequest) {
             },
           });
         }
-        for (const sc of siteContent) {
-          await tx.siteContent.create({
-            data: { key: sc.key, value: sc.value, updatedAt: new Date(sc.updatedAt) },
+        // #23: recreate ProductColorImage rows AFTER products+colors exist (both
+        // are FK targets). Cascade already cleared them via product.deleteMany.
+        if (colorImages.length > 0) {
+          await tx.productColorImage.createMany({
+            data: colorImages.map((ci) => ({
+              id: ci.id,
+              productId: ci.productId,
+              colorId: ci.colorId,
+              imageUrl: ci.imageUrl,
+              price: ci.price ?? null,
+              createdAt: new Date(ci.createdAt),
+              updatedAt: new Date(ci.updatedAt),
+            })),
           });
         }
-        for (const a of admins) {
-          await tx.admin.create({
-            data: {
-              id: a.id,
-              username: a.username,
-              password: a.password,
-              name: a.name,
-              createdAt: new Date(a.createdAt),
-            },
+        if (siteContent.length > 0) {
+          await tx.siteContent.createMany({
+            data: siteContent.map((sc) => ({
+              key: sc.key,
+              value: sc.value,
+              updatedAt: new Date(sc.updatedAt),
+            })),
           });
         }
-        for (const c of contacts) {
-          await tx.contact.create({
-            data: {
+        if (contacts.length > 0) {
+          await tx.contact.createMany({
+            data: contacts.map((c) => ({
               id: c.id,
               name: c.name,
               email: c.email,
               phone: c.phone,
               message: c.message,
               createdAt: new Date(c.createdAt),
-            },
+            })),
           });
         }
       });
 
       restored.products = products.length;
       restored.colors = colors.length;
+      restored.colorImages = colorImages.length;
       restored.siteContent = siteContent.length;
-      restored.admins = admins.length;
       restored.contacts = contacts.length;
     }
 
@@ -224,44 +304,58 @@ export async function POST(req: NextRequest) {
         }>
       >(zip, "data/inquiries.json")) || [];
 
-      // If we didn't already wipe inquiries via db scope, do it now.
-      if (!scopes.has("db")) {
-        await prisma.inquiry.deleteMany({});
-      }
-
       // Skip inquiries whose product doesn't exist (can happen when restoring inquiries
       // without the db scope and the product was previously deleted).
       const existingProductIds = new Set(
         (await prisma.product.findMany({ select: { id: true } })).map((p) => p.id)
       );
 
-      let created = 0;
-      for (const inq of inquiries) {
-        if (!existingProductIds.has(inq.productId)) continue;
-        await prisma.inquiry.create({
-          data: {
-            id: inq.id,
-            productId: inq.productId,
-            name: inq.name,
-            email: inq.email,
-            phone: inq.phone,
-            message: inq.message,
-            selectedColorName: inq.selectedColorName ?? null,
-            selectedColorHex: inq.selectedColorHex ?? null,
-            createdAt: new Date(inq.createdAt),
-          },
-        });
-        created++;
-      }
-      restored.inquiries = created;
+      const validInquiries = inquiries.filter((inq) =>
+        existingProductIds.has(inq.productId)
+      );
+
+      // #23: wipe + recreate the inquiries in a single transaction so a failure
+      // mid-restore can't leave inquiries partially deleted/recreated.
+      await prisma.$transaction([
+        prisma.inquiry.deleteMany({}),
+        ...(validInquiries.length > 0
+          ? [
+              prisma.inquiry.createMany({
+                data: validInquiries.map((inq) => ({
+                  id: inq.id,
+                  productId: inq.productId,
+                  name: inq.name,
+                  email: inq.email,
+                  phone: inq.phone,
+                  message: inq.message,
+                  selectedColorName: inq.selectedColorName ?? null,
+                  selectedColorHex: inq.selectedColorHex ?? null,
+                  createdAt: new Date(inq.createdAt),
+                })),
+              }),
+            ]
+          : []),
+      ]);
+
+      restored.inquiries = validInquiries.length;
     }
 
     if (scopes.has("uploads")) {
       restored.uploads = await writeUploadsFromZip(zip);
     }
 
+    // #27: a restore can replace the entire product set and site content, so
+    // flush both the product route caches and the site-content data cache.
+    if (scopes.has("db")) {
+      revalidateProductPaths();
+      revalidateTag(SITE_CONTENT_TAG);
+    }
+
     return NextResponse.json({ success: true, restored });
   } catch (error) {
+    if (error instanceof RestoreValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error("Restore error:", error);
     await logError(error, { route: "/api/admin/backup/restore" });
     return NextResponse.json(

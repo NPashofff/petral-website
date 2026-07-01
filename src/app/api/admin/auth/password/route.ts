@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireSession, createSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 import { logError } from "@/lib/logger";
 
 export async function PUT(request: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
-    }
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
 
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
+
+  try {
     const { currentPassword, newPassword } = await request.json();
 
     if (!currentPassword || !newPassword) {
@@ -39,10 +41,22 @@ export async function PUT(request: NextRequest) {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await prisma.admin.update({
+    // #5: bump sessionVersion so every previously-issued token for this admin
+    // is invalidated (getSession rejects them). Then mint a fresh cookie with
+    // the new version so the current admin stays logged in.
+    const updated = await prisma.admin.update({
       where: { id: session.adminId },
-      data: { password: hashedPassword },
+      data: {
+        password: hashedPassword,
+        sessionVersion: { increment: 1 },
+      },
+      select: { sessionVersion: true },
     });
+
+    await createSession(
+      { adminId: session.adminId, username: session.username },
+      updated.sessionVersion
+    );
 
     return NextResponse.json({ success: true });
   } catch (err) {

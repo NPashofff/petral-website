@@ -1,21 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 import { detectCurrency, parseBrandFromFilename, parsePackage, parseViscosity, slugify } from "@/lib/oil-import";
 import { bgnToEur } from "@/lib/currency";
+import { logError } from "@/lib/logger";
+import { revalidateProductPaths } from "@/lib/revalidate";
 
 export const runtime = "nodejs";
 
 type ImportError = { row: number; name: string; reason: string };
 
 export async function POST(req: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
-    }
+  const csrf = requireSameOrigin(req);
+  if (csrf) return csrf;
 
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
+
+  try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -55,10 +59,47 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let created = 0;
-    let updated = 0;
     let skipped = 0;
     const errors: ImportError[] = [];
+
+    // #12: Preload the existing OILS products for this brand ONCE (no per-row
+    // findFirst/findUnique). Lets us resolve insert-vs-update and slug collisions
+    // entirely in memory before issuing batched writes inside a transaction.
+    const existingProducts = await prisma.product.findMany({
+      where: { brand, category: "OILS" },
+      select: { id: true, name: true, slug: true },
+    });
+    const existingByName = new Map<string, { id: number }>();
+    const takenSlugs = new Set<string>();
+    for (const p of existingProducts) {
+      existingByName.set(p.name, { id: p.id });
+      takenSlugs.add(p.slug);
+    }
+
+    type UpdateOp = {
+      id: number;
+      price: number;
+      viscosity: string | null;
+      volumeValue: number | null;
+      volumeUnit: string | null;
+    };
+    type CreateOp = {
+      name: string;
+      slug: string;
+      description: string;
+      price: number;
+      category: string;
+      brand: string;
+      year: null;
+      viscosity: string | null;
+      volumeValue: number | null;
+      volumeUnit: string | null;
+      images: string;
+    };
+    const updateOps: UpdateOp[] = [];
+    const createOps: CreateOp[] = [];
+    // Track names seen within THIS file so duplicate rows don't both insert.
+    const seenNames = new Set<string>();
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i] as unknown[];
@@ -92,54 +133,69 @@ export async function POST(req: NextRequest) {
       const viscosity = parseViscosity(name);
       const pkg = parsePackage(name);
 
-      try {
-        const existing = await prisma.product.findFirst({
-          where: { name, brand, category: "OILS" },
+      const existing = existingByName.get(name);
+      if (existing) {
+        updateOps.push({
+          id: existing.id,
+          price,
+          viscosity,
+          volumeValue: pkg?.value ?? null,
+          volumeUnit: pkg?.unit ?? null,
         });
-
-        if (existing) {
-          await prisma.product.update({
-            where: { id: existing.id },
-            data: {
-              price,
-              viscosity,
-              volumeValue: pkg?.value ?? null,
-              volumeUnit: pkg?.unit ?? null,
-            },
-          });
-          updated++;
-        } else {
-          let slug = slugify(`${brand}-${name}`);
-          const slugTaken = await prisma.product.findUnique({ where: { slug } });
-          if (slugTaken) slug = `${slug}-${Date.now().toString(36)}-${i}`;
-
-          await prisma.product.create({
-            data: {
-              name,
-              slug,
-              description: "",
-              price,
-              category: "OILS",
-              brand,
-              year: null,
-              viscosity,
-              volumeValue: pkg?.value ?? null,
-              volumeUnit: pkg?.unit ?? null,
-              images: "[]",
-            },
-          });
-          created++;
-        }
-      } catch (e) {
-        errors.push({ row: i + 1, name, reason: e instanceof Error ? e.message : "unknown" });
+      } else if (seenNames.has(name)) {
+        // Same name appeared earlier in this file and was queued for insert;
+        // treat the repeat as a skip to avoid a unique-name collision mid-batch.
+        skipped++;
+        continue;
+      } else {
+        let slug = slugify(`${brand}-${name}`);
+        if (takenSlugs.has(slug)) slug = `${slug}-${Date.now().toString(36)}-${i}`;
+        takenSlugs.add(slug);
+        createOps.push({
+          name,
+          slug,
+          description: "",
+          price,
+          category: "OILS",
+          brand,
+          year: null,
+          viscosity,
+          volumeValue: pkg?.value ?? null,
+          volumeUnit: pkg?.unit ?? null,
+          images: "[]",
+        });
       }
+      seenNames.add(name);
     }
+
+    // #12: batch the writes in a single transaction (all-or-nothing).
+    await prisma.$transaction([
+      ...(createOps.length > 0
+        ? [prisma.product.createMany({ data: createOps })]
+        : []),
+      ...updateOps.map((op) =>
+        prisma.product.update({
+          where: { id: op.id },
+          data: {
+            price: op.price,
+            viscosity: op.viscosity,
+            volumeValue: op.volumeValue,
+            volumeUnit: op.volumeUnit,
+          },
+        })
+      ),
+    ]);
+
+    const created = createOps.length;
+    const updated = updateOps.length;
+
+    // #27: a bulk import changes the public oils/catalog listings.
+    if (created > 0 || updated > 0) revalidateProductPaths();
 
     return NextResponse.json({ brand, currency, created, updated, skipped, errors });
   } catch (e) {
-    return NextResponse.json(
-      { error: "Грешка при импорт.", detail: e instanceof Error ? e.message : "unknown" },
-      { status: 500 }
-    );
+    // #33: log server-side, return a generic message (don't leak e.message).
+    await logError(e, { route: "admin/oils/import" });
+    return NextResponse.json({ error: "Грешка при импорт." }, { status: 500 });
   }
 }

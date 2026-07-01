@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { getContentMap } from "@/lib/content";
 
-export const dynamic = "force-dynamic";
+// #28: this page renders only SiteContent (no per-request data), so it can be
+// statically rendered. getContentMap reads the unstable_cache tagged
+// 'site-content', which the admin content PUT route revalidates on save — so
+// edits still appear without force-dynamic.
 
 export const metadata: Metadata = {
   title: "За нас - Петрал Груп",

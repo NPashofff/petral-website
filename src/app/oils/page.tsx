@@ -45,7 +45,7 @@ function parsePackageParam(pkg: string | undefined): { value: number; unit: stri
 async function OilsListing({ searchParams }: OilsPageProps) {
   const params = await searchParams;
   const { brand, viscosity, package: pkg, q } = params;
-  const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
+  const requestedPage = Math.max(1, parseInt(params.page || "1", 10) || 1);
 
   const where: Prisma.ProductWhereInput = { category: "OILS", hidden: false };
   if (brand) where.brand = brand;
@@ -68,28 +68,31 @@ async function OilsListing({ searchParams }: OilsPageProps) {
     ];
   }
 
-  const [total, products] = await prisma.$transaction([
-    prisma.product.count({ where }),
-    prisma.product.findMany({
-      where,
-      orderBy: { name: "asc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      select: {
-        id: true,
-        name: true,
-        brand: true,
-        price: true,
-        viscosity: true,
-        volumeValue: true,
-        volumeUnit: true,
-      },
-    }),
-  ]);
-
-  const rows: OilRow[] = products;
+  const total = await prisma.product.count({ where });
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const baseQuery = { brand, viscosity, package: pkg, q };
+
+  // #14: clamp an out-of-range page to the last page so the table is never empty
+  // while the "стр. N от M" counter shows a non-empty page count.
+  const page = Math.min(requestedPage, totalPages);
+
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: { name: "asc" },
+    skip: (page - 1) * PAGE_SIZE,
+    take: PAGE_SIZE,
+    select: {
+      id: true,
+      name: true,
+      brand: true,
+      price: true,
+      viscosity: true,
+      volumeValue: true,
+      volumeUnit: true,
+    },
+  });
+
+  const rows: OilRow[] = products;
   const buildHref = (target: number) =>
     `/oils${buildQueryString({ ...baseQuery, page: target > 1 ? String(target) : undefined })}`;
 

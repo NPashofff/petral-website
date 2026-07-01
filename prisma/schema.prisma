@@ -28,6 +28,7 @@ model Product {
   lon         Float?
   featured    Boolean   @default(false)
   hidden      Boolean   @default(false)
+  sortOrder   Int       @default(0)
   createdAt   DateTime  @default(now())
   inquiries   Inquiry[]
   colors      Color[]   @relation("ProductColors")
@@ -36,6 +37,11 @@ model Product {
   @@index([category, hidden])
   @@index([brand])
   @@index([featured])
+  @@index([sortOrder])
+  // #12: speeds up the OILS import preload (existing products by brand+category).
+  @@index([brand, category])
+  // #22: covers the catalog filter (category, hidden) + sort (sortOrder desc, createdAt desc).
+  @@index([category, hidden, sortOrder, createdAt])
 }
 
 model Color {
@@ -53,6 +59,7 @@ model ProductColorImage {
   productId Int
   colorId   Int
   imageUrl  String
+  price     Float?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -96,11 +103,14 @@ model SiteContent {
 }
 
 model Admin {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  name      String
-  createdAt DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  username       String   @unique
+  password       String
+  name           String
+  // #5: bumped on password change so previously-issued session tokens (which
+  // embed the version they were minted with) are rejected by getSession().
+  sessionVersion Int      @default(0)
+  createdAt      DateTime @default(now())
 }
 
 model ErrorLog {

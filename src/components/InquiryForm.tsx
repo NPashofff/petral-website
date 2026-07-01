@@ -61,7 +61,13 @@ export default function InquiryForm({ productId, productName, colors = [] }: Inq
         setToast({ type: "success", text: "Запитването е изпратено успешно!" });
       } else {
         setStatus("error");
-        setToast({ type: "error", text: "Грешка при изпращане на запитването" });
+        // #34: surface the server-provided error (mirror ContactForm) instead of
+        // a hardcoded message, falling back to a generic one.
+        const data = await res.json().catch(() => null);
+        setToast({
+          type: "error",
+          text: data?.error || "Грешка при изпращане на запитването",
+        });
       }
     } catch {
       setStatus("error");

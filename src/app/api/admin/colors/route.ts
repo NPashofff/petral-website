@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
-
-async function requireAdmin() {
-  const session = await getSession();
-  return !!session;
-}
+import { requireSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 
 export async function GET() {
   const colors = await prisma.color.findMany({
@@ -29,9 +25,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const csrf = requireSameOrigin(req);
+  if (csrf) return csrf;
+
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
   try {
     const { name, hex, order } = await req.json();

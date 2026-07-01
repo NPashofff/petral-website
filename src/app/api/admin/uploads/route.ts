@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import { readdir, stat } from "fs/promises";
 import path from "path";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 import { getUploadsDir, uploadUrl } from "@/lib/uploads";
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
   try {
     const uploadsDir = getUploadsDir();

@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 import { logError } from "@/lib/logger";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function DELETE(_req: NextRequest, context: RouteContext) {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
-    }
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  const csrf = requireSameOrigin(req);
+  if (csrf) return csrf;
 
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
+
+  try {
     const { id } = await context.params;
     const contactId = Number(id);
     if (!Number.isFinite(contactId)) {

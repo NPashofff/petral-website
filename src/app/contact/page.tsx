@@ -3,7 +3,8 @@ import ContactForm from "@/components/ContactForm";
 import ProductMapLoader from "@/components/ProductMapLoader";
 import { getContentMap } from "@/lib/content";
 
-export const dynamic = "force-dynamic";
+// #28: content-only page — statically rendered, refreshed via the 'site-content'
+// cache tag that the admin content PUT route revalidates. No force-dynamic.
 
 export const metadata: Metadata = {
   title: "Контакти - Петрал Груп",

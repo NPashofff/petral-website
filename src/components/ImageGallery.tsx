@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 
 interface ImageGalleryProps {
@@ -65,6 +65,25 @@ export default function ImageGallery({ images, alt, colorImages = [] }: ImageGal
     window.addEventListener("petral:color-selected", handleColorSelected);
     return () => window.removeEventListener("petral:color-selected", handleColorSelected);
   }, [colorImages, images]);
+
+  // When the visible image changes to one tied to a color (via thumbnail,
+  // arrow keys, or lightbox nav), broadcast the color so the price updates too.
+  // Skip the initial mount so the base price shows until the user interacts.
+  const didMount = useRef(false);
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      return;
+    }
+    const match = colorImages.find((item) => item.imageUrl === images[selected]);
+    // If the visible image maps to a color, broadcast that color; otherwise
+    // broadcast null so the price resets to the base price.
+    window.dispatchEvent(
+      new CustomEvent("petral:color-selected", {
+        detail: { colorId: match ? match.colorId : null },
+      })
+    );
+  }, [selected, colorImages, images]);
 
   if (images.length === 0) {
     return (

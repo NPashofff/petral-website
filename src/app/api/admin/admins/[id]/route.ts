@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 import { logError } from "@/lib/logger";
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
-    }
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
 
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
+
+  try {
     const { id } = await params;
     const adminId = parseInt(id);
 

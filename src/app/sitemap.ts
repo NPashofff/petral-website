@@ -2,6 +2,9 @@ import { MetadataRoute } from "next";
 import { prisma } from "@/lib/db";
 import { absoluteUrl } from "@/lib/site";
 
+// #28: kept dynamic on purpose — the sitemap enumerates every visible product
+// straight from the DB and isn't wired into the product revalidation paths, so
+// it must be regenerated per request to stay accurate for crawlers.
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

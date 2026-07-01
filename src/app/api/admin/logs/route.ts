@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 
 export async function GET(request: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
-  }
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
   const { searchParams } = new URL(request.url);
   const level = searchParams.get("level");
@@ -38,10 +37,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
-  }
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
+
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");

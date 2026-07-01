@@ -6,13 +6,14 @@ import { getUploadsDir } from "@/lib/uploads";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Known raster image types we are willing to serve inline. SVG is deliberately
+// excluded: it can carry scripts and would be an XSS vector if served inline.
 const MIME: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
   ".gif": "image/gif",
-  ".svg": "image/svg+xml",
 };
 
 export async function GET(
@@ -47,13 +48,24 @@ export async function GET(
     }
     const data = await readFile(filePath);
     const ext = path.extname(filePath).toLowerCase();
-    return new NextResponse(new Uint8Array(data), {
-      headers: {
-        "Content-Type": MIME[ext] || "application/octet-stream",
-        "Content-Length": String(s.size),
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
+    const knownType = MIME[ext];
+
+    const headers: Record<string, string> = {
+      "Content-Type": knownType || "application/octet-stream",
+      "Content-Length": String(s.size),
+      "Cache-Control": "public, max-age=31536000, immutable",
+      // Prevent the browser from MIME-sniffing a file into an executable type.
+      "X-Content-Type-Options": "nosniff",
+    };
+
+    // Anything that isn't a known raster image (e.g. an SVG that slipped in, or
+    // any other file type) is forced to download instead of rendering inline.
+    if (!knownType) {
+      const downloadName = path.basename(filePath).replace(/[^a-zA-Z0-9._-]/g, "_");
+      headers["Content-Disposition"] = `attachment; filename="${downloadName}"`;
+    }
+
+    return new NextResponse(new Uint8Array(data), { headers });
   } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

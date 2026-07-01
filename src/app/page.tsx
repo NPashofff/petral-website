@@ -4,7 +4,9 @@ import ProductCard from "@/components/ProductCard";
 import { prisma } from "@/lib/db";
 import { getContentMap } from "@/lib/content";
 
-export const dynamic = "force-dynamic";
+// #28: statically rendered. Content comes from the 'site-content' cache tag;
+// the featured-products list is refreshed because every admin product mutation
+// calls revalidatePath('/') (see src/lib/revalidate.ts). No force-dynamic.
 
 export default async function HomePage() {
   const [featuredProducts, content] = await Promise.all([

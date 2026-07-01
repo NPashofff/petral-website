@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
+import { requireSameOrigin } from "@/lib/csrf";
 import { logError } from "@/lib/logger";
 
 export async function GET() {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
-    }
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
 
+  try {
     const admins = await prisma.admin.findMany({
       select: { id: true, username: true, name: true, createdAt: true },
       orderBy: { createdAt: "asc" },
@@ -24,12 +23,13 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Не сте влезли" }, { status: 401 });
-    }
+  const csrf = requireSameOrigin(request);
+  if (csrf) return csrf;
 
+  const session = await requireSession();
+  if (session instanceof NextResponse) return session;
+
+  try {
     const { username, password, name } = await request.json();
 
     if (!username || !password || !name) {

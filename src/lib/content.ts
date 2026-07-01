@@ -1,5 +1,10 @@
-import { unstable_noStore as noStore } from "next/cache";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+
+// #27: tag shared by every cached read of SiteContent. The admin content PUT
+// route calls revalidateTag(SITE_CONTENT_TAG) on success so edits are reflected
+// immediately on the public site without opting the whole tree out of caching.
+export const SITE_CONTENT_TAG = "site-content";
 
 export const defaultContent: Record<string, string> = {
   // Контакти
@@ -52,22 +57,36 @@ export const defaultContent: Record<string, string> = {
   color_primary_dark: "#0D3B12",
 };
 
-export async function getContentMap(keys: string[]): Promise<Record<string, string>> {
-  noStore();
-  const rows = await prisma.siteContent.findMany({
-    where: { key: { in: keys } },
-  });
+// #27: a single cached read of the whole SiteContent table, merged over the
+// defaults. Cached in the Next.js Data Cache and tagged with SITE_CONTENT_TAG so
+// public pages (layout, hero, footer, contact, about, home) can be cacheable
+// instead of forcing the whole site dynamic via unstable_noStore. The admin
+// content PUT route invalidates this tag on save, so edits appear immediately.
+const getCachedContent = unstable_cache(
+  async (): Promise<Record<string, string>> => {
+    const rows = await prisma.siteContent.findMany();
+    const map: Record<string, string> = { ...defaultContent };
+    for (const row of rows) {
+      map[row.key] = row.value;
+    }
+    return map;
+  },
+  ["site-content"],
+  { tags: [SITE_CONTENT_TAG] }
+);
 
+export async function getContentMap(keys: string[]): Promise<Record<string, string>> {
+  const all = await getCachedContent();
   const map: Record<string, string> = {};
   for (const key of keys) {
-    const row = rows.find((r) => r.key === key);
-    map[key] = row?.value ?? defaultContent[key] ?? "";
+    map[key] = all[key] ?? defaultContent[key] ?? "";
   }
   return map;
 }
 
 export async function getAllContent(): Promise<Record<string, string>> {
-  noStore();
+  // Admin reads the live (uncached) table so the editor always shows the latest
+  // values even within the same request that just wrote them.
   const rows = await prisma.siteContent.findMany();
   const map: Record<string, string> = { ...defaultContent };
   for (const row of rows) {
