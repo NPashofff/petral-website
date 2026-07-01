@@ -3,24 +3,25 @@
 import { useEffect, useState } from "react";
 import { formatPrice } from "@/lib/currency";
 
-interface ColorPrice {
+interface ColorDelta {
   colorId: number;
-  price: number | null;
+  /** Surcharge added to (or, if negative, subtracted from) the base price. */
+  delta: number | null;
 }
 
 interface ProductPriceProps {
   basePrice: number | null;
   unit?: string | null;
-  colorPrices?: ColorPrice[];
+  colorDeltas?: ColorDelta[];
 }
 
 /**
  * Показва цената на продукта и я обновява на живо при избор на цвят.
- * Слуша съществуващото събитие "petral:color-selected", което се излъчва
- * от ImageGallery и InquiryForm. Цена на избрания цвят има предимство пред
- * базовата; ако избраният цвят няма собствена цена, се показва базовата.
+ * Слуша съществуващото събитие "petral:color-selected" (от ImageGallery и
+ * InquiryForm). Крайната цена = основна цена + надценка на избрания цвят
+ * (надценката може да е отрицателна). Без избран цвят се показва основната.
  */
-export default function ProductPrice({ basePrice, unit = null, colorPrices = [] }: ProductPriceProps) {
+export default function ProductPrice({ basePrice, unit = null, colorDeltas = [] }: ProductPriceProps) {
   const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -38,11 +39,11 @@ export default function ProductPrice({ basePrice, unit = null, colorPrices = [] 
     return () => window.removeEventListener("petral:color-selected", handleColorSelected);
   }, []);
 
-  const colorPrice =
+  const delta =
     selectedColorId != null
-      ? colorPrices.find((c) => c.colorId === selectedColorId)?.price ?? null
-      : null;
-  const display = colorPrice ?? basePrice;
+      ? colorDeltas.find((c) => c.colorId === selectedColorId)?.delta ?? 0
+      : 0;
+  const display = basePrice != null ? basePrice + delta : null;
 
   return (
     <div className="mt-4">
@@ -50,7 +51,7 @@ export default function ProductPrice({ basePrice, unit = null, colorPrices = [] 
         {display != null ? formatPrice(display, { unit }) : "Цена при запитване"}
       </p>
       {display != null && (
-        <span className="block text-sm font-normal text-gray-500 mt-0.5">без ДДС</span>
+        <span className="block text-sm text-gray-600 mt-1">Цените са без ДДС</span>
       )}
     </div>
   );

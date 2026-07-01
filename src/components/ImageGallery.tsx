@@ -2,19 +2,22 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
+import { formatPrice, formatDelta } from "@/lib/currency";
 
 interface ImageGalleryProps {
   images: string[];
   alt: string;
+  basePrice?: number | null;
   colorImages?: {
     colorId: number;
     name: string;
     hex: string;
     imageUrl: string;
+    priceDelta?: number | null;
   }[];
 }
 
-export default function ImageGallery({ images, alt, colorImages = [] }: ImageGalleryProps) {
+export default function ImageGallery({ images, alt, colorImages = [], basePrice = null }: ImageGalleryProps) {
   const [selected, setSelected] = useState(0);
   const [lightbox, setLightbox] = useState(false);
 
@@ -141,11 +144,19 @@ export default function ImageGallery({ images, alt, colorImages = [] }: ImageGal
 
       {colorImages.length > 0 && (
         <div className="mt-4">
-          <p className="text-sm font-medium text-gray-700 mb-2">Снимки по цвят</p>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 mb-2">
+            <p className="text-sm font-medium text-gray-700">Снимки по цвят</p>
+            {basePrice != null && (
+              <p className="text-sm text-gray-600">
+                Основна цена: <span className="font-semibold text-gray-800">{formatPrice(basePrice)}</span> без ДДС
+              </p>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {colorImages.map((color) => {
               const imageIndex = images.findIndex((img) => img === color.imageUrl);
               const active = imageIndex >= 0 && selected === imageIndex;
+              const deltaLabel = formatDelta(color.priceDelta);
 
               return (
                 <button
@@ -166,6 +177,11 @@ export default function ImageGallery({ images, alt, colorImages = [] }: ImageGal
                     style={{ backgroundColor: color.hex }}
                   />
                   <span>{color.name}</span>
+                  {deltaLabel && (
+                    <span className={`text-xs font-semibold ${color.priceDelta! < 0 ? "text-green-700" : "text-gray-500"}`}>
+                      {deltaLabel}
+                    </span>
+                  )}
                 </button>
               );
             })}

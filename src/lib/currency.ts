@@ -28,3 +28,13 @@ export function formatPrice(eur: number, opts: FormatPriceOptions = {}): string 
   const bgn = eurToBgn(eur);
   return `${eurStr} (${fmt(bgn)} лв${unit ? `/${unit}` : ""})`;
 }
+
+/**
+ * Signed surcharge label for a per-colour price adjustment, e.g. "+500,00 €"
+ * or "−300,00 €". Returns null for a zero/absent delta (no surcharge to show).
+ */
+export function formatDelta(eur: number | null | undefined): string | null {
+  if (eur == null || eur === 0) return null;
+  const sign = eur > 0 ? "+" : "−";
+  return `${sign}${fmt(Math.abs(eur))} €`;
+}

@@ -115,6 +115,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
   };
 
   const isOil = product.category === "OILS";
+  // Per-colour `price` column now stores a signed surcharge (delta) added to the
+  // base product price rather than an absolute price.
+  const colorDeltaById = new Map(product.colorImages.map((ci) => [ci.colorId, ci.price ?? null]));
   const colorImages = product.colorImages
     .filter((item) => images.includes(item.imageUrl))
     .map((item) => ({
@@ -122,15 +125,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
       name: item.color.name,
       hex: item.color.hex,
       imageUrl: item.imageUrl,
+      priceDelta: item.price ?? null,
     }));
   const inquiryColors = product.colors.map((color) => ({
     ...color,
     imageUrl: colorImages.find((item) => item.colorId === color.id)?.imageUrl ?? null,
+    priceDelta: colorDeltaById.get(color.id) ?? null,
   }));
-  const colorPriceById = new Map(product.colorImages.map((ci) => [ci.colorId, ci.price ?? null]));
-  const colorPrices = product.colors.map((color) => ({
+  const colorDeltas = product.colors.map((color) => ({
     colorId: color.id,
-    price: colorPriceById.get(color.id) ?? null,
+    delta: colorDeltaById.get(color.id) ?? null,
   }));
   const totalPrice =
     isOil && product.price != null && product.volumeValue != null
@@ -175,7 +179,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Top section: Gallery + Key info side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Left: Gallery */}
-        <ImageGallery images={images} alt={product.name} colorImages={colorImages} />
+        <ImageGallery images={images} alt={product.name} colorImages={colorImages} basePrice={product.price} />
 
         {/* Right: Key info */}
         <div>
@@ -192,7 +196,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   : "Цена при запитване"}
               </p>
               {product.price != null && (
-                <span className="block text-sm font-normal text-gray-500 mt-0.5">без ДДС</span>
+                <span className="block text-sm text-gray-600 mt-1">Цените са без ДДС</span>
               )}
               {totalPrice != null && (
                 <p className="text-sm text-gray-600 mt-1">
@@ -202,7 +206,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               )}
             </div>
           ) : (
-            <ProductPrice basePrice={product.price} colorPrices={colorPrices} />
+            <ProductPrice basePrice={product.price} colorDeltas={colorDeltas} />
           )}
 
           <p className="text-sm text-gray-600 mt-2">
@@ -251,7 +255,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       {/* Inquiry form - at the bottom */}
       <div className="mt-12">
-        <InquiryForm productId={product.id} productName={product.name} colors={inquiryColors} />
+        <InquiryForm productId={product.id} productName={product.name} colors={inquiryColors} basePrice={product.price} />
       </div>
 
       <p className="text-center text-sm text-gray-500 mt-8">Снимките са илюстративни !</p>

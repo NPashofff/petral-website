@@ -2,21 +2,24 @@
 
 import { useState, useCallback } from "react";
 import Toast from "@/components/Toast";
+import { formatPrice, formatDelta } from "@/lib/currency";
 
 interface Color {
   id: number;
   name: string;
   hex: string;
   imageUrl?: string | null;
+  priceDelta?: number | null;
 }
 
 interface InquiryFormProps {
   productId: number;
   productName: string;
   colors?: Color[];
+  basePrice?: number | null;
 }
 
-export default function InquiryForm({ productId, productName, colors = [] }: InquiryFormProps) {
+export default function InquiryForm({ productId, productName, colors = [], basePrice = null }: InquiryFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -127,10 +130,18 @@ export default function InquiryForm({ productId, productName, colors = [] }: Inq
 
       {hasColors && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Цвят *</label>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 mb-2">
+            <label className="block text-sm font-medium text-gray-700">Цвят *</label>
+            {basePrice != null && (
+              <span className="text-sm text-gray-600">
+                Основна цена: <span className="font-semibold text-gray-800">{formatPrice(basePrice)}</span> без ДДС
+              </span>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2">
             {colors.map((color) => {
               const active = selectedColorId === color.id;
+              const deltaLabel = formatDelta(color.priceDelta);
               return (
                 <label
                   key={color.id}
@@ -156,6 +167,11 @@ export default function InquiryForm({ productId, productName, colors = [] }: Inq
                     style={{ backgroundColor: color.hex }}
                   />
                   <span>{color.name}</span>
+                  {deltaLabel && (
+                    <span className={`text-xs font-semibold ${color.priceDelta! < 0 ? "text-green-700" : "text-gray-500"}`}>
+                      {deltaLabel}
+                    </span>
+                  )}
                 </label>
               );
             })}

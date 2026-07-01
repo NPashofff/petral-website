@@ -187,7 +187,9 @@ test.describe('Phase 5 — #13 live price reset on no-color photo', () => {
         images: JSON.stringify([img1, img2]),
         colorIds: [red!.id],
         colorImageMap: { [String(red!.id)]: img2 },
-        colorPriceMap: { [String(red!.id)]: 9999 },
+        // Per-colour value is a signed surcharge added to the base price:
+        // 5870 + 1000 = 6870 when Червен is selected.
+        colorPriceMap: { [String(red!.id)]: 1000 },
       },
     });
     expect(res.ok(), `create failed: ${res.status()} ${await res.text()}`).toBeTruthy();
@@ -205,17 +207,17 @@ test.describe('Phase 5 — #13 live price reset on no-color photo', () => {
     // Initial: base price 5870 (no color selected on mount).
     await expect(price).toContainText('5870');
 
-    // Click the color swatch in "Снимки по цвят" → per-color price 9999.
+    // Click the color swatch → base 5870 + surcharge 1000 = 6870.
     await page.getByRole('button', { name: 'Червен' }).click();
-    await expect(price).toContainText('9999');
+    await expect(price).toContainText('6870');
 
     // Click the first thumbnail (a no-color photo) → resets to base 5870.
     const thumbs = page.getByRole('tab');
     await thumbs.first().click();
     await expect(price).toContainText('5870');
 
-    // Click the second thumbnail (the color photo) → back to 9999.
+    // Click the second thumbnail (the color photo) → back to 6870.
     await thumbs.nth(1).click();
-    await expect(price).toContainText('9999');
+    await expect(price).toContainText('6870');
   });
 });

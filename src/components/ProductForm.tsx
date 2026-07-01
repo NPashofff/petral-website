@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import Toast from "@/components/Toast";
 import { CATEGORIES, CATEGORY_KEYS } from "@/lib/categories";
 import { parseImages, serializeImages } from "@/lib/images";
+import { formatPrice } from "@/lib/currency";
 
 const RichTextEditor = dynamic(() => import("./RichTextEditor"), { ssr: false });
 
@@ -662,12 +663,12 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
         {form.colorIds.length > 0 && (
           <div className="mt-4 border border-gray-200 rounded-lg overflow-hidden">
             <div className="bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700">
-              Снимка и цена към избран цвят
+              Снимка и надценка към избран цвят
             </div>
             <div className="hidden md:grid grid-cols-[160px_1fr_150px] gap-3 px-3 py-2 border-t border-gray-100 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <span>Цвят</span>
               <span>Снимка</span>
-              <span>Цена (€)</span>
+              <span>Надценка (€)</span>
             </div>
             <div className="divide-y divide-gray-100">
               {form.colorIds.map((colorId) => {
@@ -704,27 +705,34 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
                       )}
                     </div>
                     <div>
-                      <span className="md:hidden block text-xs font-medium text-gray-500 mb-1">Цена (€)</span>
+                      <span className="md:hidden block text-xs font-medium text-gray-500 mb-1">Надценка (€)</span>
                       <input
                         type="number"
-                        min={0}
                         step="0.01"
                         value={form.colorPriceMap[colorId] ?? ""}
                         onChange={(e) => {
                           const val = e.target.value;
-                          setColorPrice(colorId, val === "" ? null : parseFloat(val));
+                          const n = parseFloat(val);
+                          setColorPrice(colorId, val === "" || !Number.isFinite(n) ? null : n);
                         }}
-                        placeholder="напр. 6500"
-                        aria-label={`Цена за ${color.name} (€)`}
+                        placeholder="напр. 500 или -300"
+                        aria-label={`Надценка за ${color.name} (€)`}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
                       />
+                      {form.price == null ? (
+                        <p className="text-xs text-gray-400 mt-1">Задайте основна цена горе</p>
+                      ) : Number.isFinite(form.colorPriceMap[colorId] as number) ? (
+                        <p className="text-xs text-gray-500 mt-1">
+                          = {formatPrice(form.price + (form.colorPriceMap[colorId] as number), { showBgn: false })}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 );
               })}
             </div>
             <p className="bg-gray-50 px-3 py-2 text-xs text-gray-500">
-              Цената (€) за всеки цвят е незадължителна — празно поле означава базовата цена на продукта.
+              Надценка (€): сума, която се добавя към основната цена (или се изважда, ако е с −). Празно = основната цена.
             </p>
           </div>
         )}
