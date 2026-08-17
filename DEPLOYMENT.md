@@ -45,12 +45,23 @@ docker buildx build --platform linux/amd64 -t npashofff/petral-web:latest --push
 | 3000 | 3333 | TCP |
 
 ### Environment Variables
-| Name | Value |
-|------|-------|
-| `NODE_ENV` | `production` |
-| `ADMIN_SECRET` | *(секретен ключ за админ панела)* |
-| `RESEND_API_KEY` | *(Resend API ключ за email нотификации)* |
-| `NOTIFICATION_EMAIL` | `admin@petral.bg` |
+| Name | Value | Задължителна |
+|------|-------|--------------|
+| `NODE_ENV` | `production` | да |
+| `ADMIN_SECRET` | *(секретен ключ за админ панела)* | да |
+| `RESEND_API_KEY` | *(Resend API ключ за email нотификации)* | да |
+| `NOTIFICATION_EMAIL` | `admin@petral.bg` | да |
+| `INITIAL_ADMIN_PASSWORD` | *(парола за първия админ)* | само при празен volume |
+
+> **`ADMIN_SECRET`** е fail-fast — при `NODE_ENV=production` без нея приложението хвърля грешка още при
+> първата заявка към админ панела. Не я оставяй празна.
+
+> **`INITIAL_ADMIN_PASSWORD`** трябва при **първо** стартиране върху празен `/app/data` volume.
+> Seed скриптът отказва да създаде admin акаунт с парола по подразбиране в production и контейнерът
+> излиза с грешка:
+> `INITIAL_ADMIN_PASSWORD environment variable is required to bootstrap the default admin in production.`
+> Щом акаунтът е създаден веднъж, променливата не се чете повече и може да се премахне — при следващи
+> стартирания seed-ът вижда съществуващия админ и я прескача. Смени паролата през `/admin/settings`.
 
 ### Storage (Host Path Volumes)
 | Host Path | Mount Path | Описание |
