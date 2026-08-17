@@ -1,0 +1,4 @@
+# Shell scripts run inside the Linux container. If a Windows checkout converts
+# them to CRLF, the shebang resolves to "/bin/sh\r" and the container exits 127.
+*.sh text eol=lf
+entrypoint.sh text eol=lf
