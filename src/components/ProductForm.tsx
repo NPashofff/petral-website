@@ -309,7 +309,7 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div>
-          <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-1">Цена (€)</label>
+          <label htmlFor="product-price" className="block text-sm font-medium text-gray-700 mb-1">Цена (€, с ДДС)</label>
           <input
             id="product-price"
             type="number"

@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 import { resolveProductImage } from "@/lib/brand-logo";
-import { formatPrice } from "@/lib/currency";
+import PriceTag from "@/components/PriceTag";
 import { parseImages } from "@/lib/images";
 
 interface ProductCardProps {
@@ -35,11 +35,6 @@ export default function ProductCard({
   const firstImage = resolveProductImage(imageList, brand, category);
   const isOil = category === "OILS";
 
-  const priceLabel = (() => {
-    if (price == null) return "-";
-    return formatPrice(price, { unit: isOil ? volumeUnit ?? null : null });
-  })();
-
   return (
     <Link href={`/catalog/${id}`} className="group block">
       <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
@@ -70,7 +65,20 @@ export default function ProductCard({
             {name}
           </h3>
           <p className="text-sm text-gray-500 mt-1">{brand}</p>
-          <p className="text-xl font-bold text-[var(--color-primary)] mt-2">{priceLabel}</p>
+          {price != null ? (
+            <PriceTag
+              gross={price}
+              label="Цена"
+              unit={isOil ? volumeUnit ?? null : null}
+              size="md"
+              className="mt-2"
+            />
+          ) : (
+            <div className="mt-2">
+              <span className="block text-[11px] uppercase tracking-wide text-gray-400">Цена</span>
+              <span className="block text-xl font-bold text-[var(--color-primary)]">-</span>
+            </div>
+          )}
         </div>
       </div>
     </Link>

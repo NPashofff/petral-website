@@ -7,7 +7,7 @@ import ProductMapLoader from "@/components/ProductMapLoader";
 import type { Metadata } from "next";
 import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 import { getBrandLogoUrl } from "@/lib/brand-logo";
-import { formatPrice } from "@/lib/currency";
+import PriceTag from "@/components/PriceTag";
 import { absoluteUrl } from "@/lib/site";
 import { parseImages } from "@/lib/images";
 
@@ -95,6 +95,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             url: productUrl,
             priceCurrency: "EUR",
             price: product.price.toFixed(2),
+            valueAddedTaxIncluded: true,
             availability: "https://schema.org/InStock",
           },
         }
@@ -166,24 +167,32 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </span>
 
           <h1 className="text-3xl font-bold text-gray-900 mt-4">{product.name}</h1>
-          {isOil ? (
+          {product.price == null ? (
             <div className="mt-4">
-              <p className="text-3xl font-bold text-[var(--color-primary)]">
-                {product.price != null
-                  ? formatPrice(product.price, { unit: product.volumeUnit ?? null })
-                  : "Цена при запитване"}
-              </p>
+              <span className="block text-xs uppercase tracking-wide text-gray-500">Цена</span>
+              <span className="block text-3xl font-bold text-[var(--color-primary)]">
+                При запитване
+              </span>
+            </div>
+          ) : isOil ? (
+            <div className="mt-4">
+              <PriceTag
+                gross={product.price}
+                label="Цена"
+                unit={product.volumeUnit ?? null}
+                size="lg"
+              />
               {totalPrice != null && (
-                <p className="text-sm text-gray-600 mt-1">
-                  Обща цена за опаковка ({product.volumeValue}{product.volumeUnit}):{" "}
-                  <strong>{formatPrice(totalPrice)}</strong>
-                </p>
+                <div className="mt-3">
+                  <p className="text-sm text-gray-600">
+                    Обща цена за опаковка ({product.volumeValue}{product.volumeUnit}):
+                  </p>
+                  <PriceTag gross={totalPrice} size="sm" className="mt-0.5" />
+                </div>
               )}
             </div>
           ) : (
-            <p className="text-3xl font-bold text-[var(--color-primary)] mt-4">
-              {product.price != null ? formatPrice(product.price) : "Цена при запитване"}
-            </p>
+            <PriceTag gross={product.price} label="Цена" size="lg" className="mt-4" />
           )}
 
           {/* Specs table */}

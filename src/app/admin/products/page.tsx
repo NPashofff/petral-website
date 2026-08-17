@@ -37,7 +37,7 @@ export default async function AdminProductsPage() {
               <th className="text-left px-4 py-3 font-medium">Име</th>
               <th className="text-left px-4 py-3 font-medium">Категория</th>
               <th className="text-left px-4 py-3 font-medium">Марка</th>
-              <th className="text-right px-4 py-3 font-medium">Цена</th>
+              <th className="text-right px-4 py-3 font-medium">Цена (с ДДС)</th>
               <th className="text-center px-4 py-3 font-medium">Featured</th>
               <th className="text-center px-4 py-3 font-medium">Скрит</th>
               <th className="text-right px-4 py-3 font-medium">Действия</th>
@@ -49,7 +49,6 @@ export default async function AdminProductsPage() {
               const priceText = product.price != null
                 ? formatPrice(product.price, {
                     unit: isOil ? product.volumeUnit ?? null : null,
-                    showBgn: false,
                   })
                 : "-";
               return (

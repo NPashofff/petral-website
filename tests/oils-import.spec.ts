@@ -1,17 +1,24 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
-import { execSync } from "child_process";
+import { PrismaClient } from "@prisma/client";
 
 const FIXTURE = path.join(__dirname, "fixtures", "Shell new price 01.09.2023.xlsx");
 
-function clearOils() {
+// The import test asserts on "created" vs "updated" counts, so it needs an empty
+// slate. Locally seeded demo products are left alone — their slugs are prefixed
+// and never collide with the ones the importer generates.
+async function clearOils() {
+  // Playwright does not load .env, so fall back to the same default the app uses.
+  // Relative file: URLs resolve against the schema directory, not the cwd.
+  const prisma = new PrismaClient({
+    datasourceUrl: process.env.DATABASE_URL ?? "file:./dev.db",
+  });
   try {
-    execSync(
-      `sqlite3 prisma/dev.db "DELETE FROM Product WHERE category='OILS'"`,
-      { stdio: "ignore" }
-    );
-  } catch {
-    // ignore
+    await prisma.product.deleteMany({
+      where: { category: "OILS", NOT: { slug: { startsWith: "demo-" } } },
+    });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
@@ -25,7 +32,7 @@ async function login(page: import("@playwright/test").Page) {
 
 test.describe("Oils Excel import", () => {
   test("imports Shell pricelist, then re-imports as updates", async ({ page }) => {
-    clearOils();
+    await clearOils();
     await login(page);
     await page.goto("/admin/products/import");
 
@@ -71,7 +78,9 @@ test.describe("Oils Excel import", () => {
     await page.goto("/oils?viscosity=15W40");
     const firstCard = page.locator("a[href^='/catalog/']").first();
     await firstCard.click();
-    await expect(page.locator("text=/лв\\/(L|kg)/").first()).toBeVisible();
+    await expect(page.locator("text=/€\\/(L|kg)/").first()).toBeVisible();
+    await expect(page.locator("text=/без вкл. ДДС/").first()).toBeVisible();
+    await expect(page.locator("text=/с вкл. ДДС/").first()).toBeVisible();
     await expect(page.locator("text=/Обща цена за опаковка/")).toBeVisible();
   });
 });

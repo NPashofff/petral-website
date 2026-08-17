@@ -102,10 +102,16 @@ test.describe('Full Site Functionality Test', () => {
       await page.locator("#contact-name").fill(`Test User ${i}`);
       await page.locator("#contact-email").fill(`test${i}@example.com`);
       await page.locator("#contact-message").fill(`Test message ${i}`);
+      // Submit stays disabled until GDPR consent is given.
+      await page.locator("#contact-consent").check();
       await page.getByRole('button', { name: /Изпрати/ }).click();
 
       // Wait for any response (success, error, or rate limit)
-      await page.getByText(/Съобщението е изпратено|Твърде много|Грешка/).waitFor({ timeout: 5000 });
+      // Success shows both a toast and an inline panel, hence .first().
+      await page
+        .getByText(/Съобщението е изпратено|Твърде много|Грешка/)
+        .first()
+        .waitFor({ timeout: 5000 });
 
       const limited = await page.getByText(/Твърде много/i).isVisible().catch(() => false);
       if (limited) {

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { formatPrice } from "@/lib/currency";
+import PriceTag from "@/components/PriceTag";
 
 export type OilRow = {
   id: number;
@@ -117,10 +117,14 @@ export default function OilsTable({ rows }: { rows: OilRow[] }) {
                     {r.volumeValue != null && unit ? `${r.volumeValue} ${unit}` : "—"}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    {r.price != null ? formatPrice(r.price, { unit: unit || null }) : "—"}
+                    {r.price != null ? (
+                      <PriceTag gross={r.price} unit={unit || null} size="sm" align="right" />
+                    ) : (
+                      "—"
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">
-                    {total != null ? formatPrice(total) : "—"}
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    {total != null ? <PriceTag gross={total} size="sm" align="right" /> : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Link
