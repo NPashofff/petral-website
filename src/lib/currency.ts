@@ -14,10 +14,14 @@ export function netFromGross(gross: number): number {
   return Math.round((gross / (1 + VAT_RATE)) * 100) / 100;
 }
 
-function fmt(value: number, fractionDigits = 2): string {
-  return value.toLocaleString("bg-BG", {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
+// Round trips through cents first, so values like 7.2 * 20 = 144.00000000000003
+// are treated as whole. Whole amounts drop the ",00" tail entirely.
+function fmt(value: number): string {
+  const rounded = Math.round(value * 100) / 100;
+  const hasCents = !Number.isInteger(rounded);
+  return rounded.toLocaleString("bg-BG", {
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: 2,
   });
 }
 
