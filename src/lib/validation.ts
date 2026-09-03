@@ -3,6 +3,7 @@ import { z } from "zod";
 import { CATEGORY_KEYS } from "@/lib/categories";
 import { sanitizeProductHtml } from "@/lib/sanitize";
 import { normalizeImagesString } from "@/lib/images";
+import { sofiaMidnightUtc } from "@/lib/dates";
 
 const trimmedString = (max: number) =>
   z.string().trim().min(1).max(max);
@@ -190,6 +191,77 @@ export function buildColorRows(productId: number, input: ProductInput) {
       return { productId, colorId, imageUrl, price: colorPrice };
     })
     .filter((row) => row.imageUrl.length > 0 || row.price != null);
+}
+
+/** Optional "YYYY-MM-DD" (Sofia calendar day) → instant of local midnight, or null. */
+const optionalIsoDate = z
+  .union([z.string(), z.null()])
+  .optional()
+  .transform((v, ctx) => {
+    const s = typeof v === "string" ? v.trim() : "";
+    if (!s) return null;
+    const d = sofiaMidnightUtc(s);
+    if (!d) {
+      ctx.addIssue({ code: "custom", message: "Очаква се валидна дата във формат ГГГГ-ММ-ДД." });
+      return z.NEVER;
+    }
+    return d;
+  });
+
+export const promotionSchema = z
+  .object({
+    title: trimmedString(200),
+    type: z.enum(["PRICE", "PERCENT", "OTHER"]),
+    promoPriceGross: nullableNumber,
+    percent: nullableNumber,
+    ribbonText: z
+      .union([z.string(), z.null()])
+      .optional()
+      .transform((v) => (typeof v === "string" ? v.trim() : ""))
+      .pipe(z.string().max(40))
+      .transform((v) => v || "ПРОМОЦИЯ"),
+    comment: optionalText(1000),
+    startsAt: optionalIsoDate,
+    endsAt: optionalIsoDate,
+    active: z.unknown().optional().transform((v) => v === undefined ? true : !!v),
+    productIds: z
+      .union([z.array(z.unknown()), z.null()])
+      .optional()
+      .transform((v) =>
+        Array.isArray(v)
+          ? Array.from(new Set(v.map((x) => Number(x)).filter((x) => Number.isInteger(x) && x > 0)))
+          : []
+      ),
+  })
+  .superRefine((val, ctx) => {
+    if (val.type === "PRICE") {
+      if (val.promoPriceGross == null || val.promoPriceGross <= 0) {
+        ctx.addIssue({ code: "custom", path: ["promoPriceGross"], message: "Въведете промо цена с ДДС (> 0)." });
+      }
+    } else if (val.type === "PERCENT" && (val.percent == null || val.percent <= 0 || val.percent > 100)) {
+      ctx.addIssue({ code: "custom", path: ["percent"], message: "Процентът трябва да е между 0 и 100." });
+    }
+    // OTHER: no price fields required.
+    if (val.startsAt && val.endsAt && val.endsAt < val.startsAt) {
+      ctx.addIssue({ code: "custom", path: ["endsAt"], message: "Крайната дата е преди началната." });
+    }
+  });
+
+export type PromotionInput = z.infer<typeof promotionSchema>;
+
+/** Prisma `data` for Promotion create/update (products are linked separately). */
+export function buildPromotionData(input: PromotionInput) {
+  return {
+    title: input.title,
+    type: input.type,
+    promoPriceGross: input.type === "PRICE" ? input.promoPriceGross : null,
+    percent: input.type === "PERCENT" ? input.percent : null,
+    ribbonText: input.ribbonText,
+    comment: input.comment || null,
+    startsAt: input.startsAt,
+    endsAt: input.endsAt,
+    active: input.active,
+  };
 }
 
 export const inquirySchema = z.object({

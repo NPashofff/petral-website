@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import ProductCard from "@/components/ProductCard";
+import { getActivePromo } from "@/lib/promotion";
+import { findProductsPromoFirst } from "@/lib/promotion-query";
 import ProductFilter from "@/components/ProductFilter";
 import Pagination from "@/components/Pagination";
 import type { Metadata } from "next";
@@ -74,7 +76,9 @@ async function ProductList({ searchParams }: CatalogPageProps) {
   // while the "стр. N от M" counter shows a non-empty page count.
   const page = Math.min(requestedPage, totalPages);
 
-  const products = await prisma.product.findMany({
+  // Products with an active promotion come first, then the rest; both groups
+  // keep the admin sort order (sortOrder desc, newest first).
+  const products = await findProductsPromoFirst({
     where,
     orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
     skip: (page - 1) * PAGE_SIZE,
@@ -92,7 +96,7 @@ async function ProductList({ searchParams }: CatalogPageProps) {
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {products.map((product) => (
-          <ProductCard key={product.id} {...product} />
+          <ProductCard key={product.id} {...product} promo={getActivePromo(product)} />
         ))}
       </div>
       <Pagination page={page} totalPages={totalPages} buildHref={buildHref} />

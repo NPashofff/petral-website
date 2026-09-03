@@ -15,6 +15,8 @@ import {
 import { revalidateTag } from "next/cache";
 import { SITE_CONTENT_TAG } from "@/lib/content";
 import { revalidateProductPaths } from "@/lib/revalidate";
+import { isPromotionType } from "@/lib/promotion";
+import { clampSortOrder } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -162,10 +164,32 @@ export async function POST(req: NextRequest) {
           lon: number | null;
           featured: boolean;
           hidden?: boolean;
+          sortOrder?: number;
+          promotionId?: number | null;
           createdAt: string;
           colorIds: number[];
         }>
       >(zip, "data/products.json")) || [];
+      // Promotions: absent in backups made before the feature existed.
+      const promotions = (await readJson<
+        Array<{
+          id: number;
+          title: string;
+          type: string;
+          promoPriceGross: number | null;
+          percent: number | null;
+          ribbonText: string;
+          comment: string | null;
+          startsAt: string | null;
+          endsAt: string | null;
+          active: boolean;
+          createdAt: string;
+        }>
+      >(zip, "data/promotions.json")) || [];
+      // Only known types restore; anything else would silently become a
+      // discount-less promotion, so it is skipped and reported.
+      const validPromotions = promotions.filter((p) => isPromotionType(p.type));
+      const promotionIds = new Set(validPromotions.map((p) => p.id));
       const colors = (await readJson<
         Array<{ id: number; name: string; hex: string; order: number; createdAt: string }>
       >(zip, "data/colors.json")) || [];
@@ -201,6 +225,25 @@ export async function POST(req: NextRequest) {
         await tx.color.deleteMany({});
         await tx.siteContent.deleteMany({});
         await tx.contact.deleteMany({});
+        await tx.promotion.deleteMany({});
+
+        if (validPromotions.length > 0) {
+          await tx.promotion.createMany({
+            data: validPromotions.map((p) => ({
+              id: p.id,
+              title: p.title,
+              type: p.type,
+              promoPriceGross: p.promoPriceGross ?? null,
+              percent: p.percent ?? null,
+              ribbonText: p.ribbonText || "ПРОМОЦИЯ",
+              comment: p.comment ?? null,
+              startsAt: p.startsAt ? new Date(p.startsAt) : null,
+              endsAt: p.endsAt ? new Date(p.endsAt) : null,
+              active: p.active !== false,
+              createdAt: new Date(p.createdAt),
+            })),
+          });
+        }
 
         // #23: flat tables (no relation writes) go through createMany.
         if (colors.length > 0) {
@@ -239,6 +282,10 @@ export async function POST(req: NextRequest) {
               lon: p.lon,
               featured: p.featured,
               hidden: !!p.hidden,
+              sortOrder: clampSortOrder(p.sortOrder),
+              // Only link to a promotion that exists in this backup (SetNull FK).
+              promotionId:
+                p.promotionId != null && promotionIds.has(p.promotionId) ? p.promotionId : null,
               createdAt: new Date(p.createdAt),
               colors: { connect: (p.colorIds || []).map((id) => ({ id })) },
             },
@@ -287,6 +334,8 @@ export async function POST(req: NextRequest) {
       restored.colorImages = colorImages.length;
       restored.siteContent = siteContent.length;
       restored.contacts = contacts.length;
+      restored.promotions = validPromotions.length;
+      restored.promotionsSkipped = promotions.length - validPromotions.length;
     }
 
     if (scopes.has("inquiries")) {

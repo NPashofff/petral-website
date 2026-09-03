@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
-import DeleteRowButton from "@/components/DeleteRowButton";
-import { categoryBadgeClass, categoryLabel, CATEGORIES, CATEGORY_KEYS } from "@/lib/categories";
+import AdminProductsTable, { type AdminProductRow } from "@/components/AdminProductsTable";
+import { CATEGORIES, CATEGORY_KEYS } from "@/lib/categories";
 import { formatPrice } from "@/lib/currency";
+import { promotionStatus } from "@/lib/promotion";
 import type { Prisma } from "@prisma/client";
 
 // #28: admin listing must always reflect live DB state (just-edited products,
@@ -34,9 +35,30 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
   const products = await prisma.product.findMany({
     where,
     orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
+    include: { promotion: true },
   });
 
   const filtered = !!category || !!q;
+
+  const rows: AdminProductRow[] = products.map((product) => {
+    const isOil = product.category === "OILS";
+    return {
+      id: product.id,
+      sortOrder: product.sortOrder,
+      name: product.name,
+      category: product.category,
+      brand: product.brand,
+      priceText:
+        product.price != null
+          ? formatPrice(product.price, { unit: isOil ? product.volumeUnit ?? null : null, showBgn: false })
+          : "-",
+      featured: product.featured,
+      hidden: product.hidden,
+      promotion: product.promotion
+        ? { id: product.promotion.id, title: product.promotion.title, status: promotionStatus(product.promotion) }
+        : null,
+    };
+  });
 
   return (
     <>
@@ -112,68 +134,7 @@ export default async function AdminProductsPage({ searchParams }: AdminProductsP
         {filtered ? " (филтрирани)" : ""}
       </p>
 
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium">ID</th>
-              <th className="text-center px-4 py-3 font-medium" title="Подредба в каталога (0–99)">№</th>
-              <th className="text-left px-4 py-3 font-medium">Име</th>
-              <th className="text-left px-4 py-3 font-medium">Категория</th>
-              <th className="text-left px-4 py-3 font-medium">Марка</th>
-              <th className="text-right px-4 py-3 font-medium">Цена</th>
-              <th className="text-center px-4 py-3 font-medium">Featured</th>
-              <th className="text-center px-4 py-3 font-medium">Скрит</th>
-              <th className="text-right px-4 py-3 font-medium">Действия</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {products.map((product) => {
-              const isOil = product.category === "OILS";
-              const priceText = product.price != null
-                ? formatPrice(product.price, {
-                    unit: isOil ? product.volumeUnit ?? null : null,
-                    showBgn: false,
-                  })
-                : "-";
-              return (
-                <tr key={product.id} className={`hover:bg-gray-50 ${product.hidden ? "opacity-50" : ""}`}>
-                  <td className="px-4 py-3 text-gray-500">{product.id}</td>
-                  <td className="px-4 py-3 text-center font-semibold text-gray-700">{product.sortOrder}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${categoryBadgeClass(product.category)}`}>
-                      {categoryLabel(product.category)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{product.brand}</td>
-                  <td className="px-4 py-3 text-right font-medium">{priceText}</td>
-                  <td className="px-4 py-3 text-center">{product.featured ? "✓" : ""}</td>
-                  <td className="px-4 py-3 text-center">{product.hidden ? "✓" : ""}</td>
-                  <td className="px-4 py-3 text-right space-x-2">
-                    <Link
-                      href={`/admin/products/${product.id}/edit`}
-                      className="text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      Редактирай
-                    </Link>
-                    <DeleteRowButton
-                      endpoint={`/api/admin/products/${product.id}`}
-                      confirmTitle="Изтриване на продукт"
-                      confirmMessage={`Сигурни ли сте, че искате да изтриете "${product.name}"? Действието е необратимо.`}
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {products.length === 0 && (
-          <p className="text-center text-gray-400 py-8">
-            {filtered ? "Няма намерени продукти за този филтър." : "Няма продукти."}
-          </p>
-        )}
-      </div>
+      <AdminProductsTable products={rows} filtered={filtered} />
     </>
   );
 }

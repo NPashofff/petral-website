@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { formatPrice, formatDelta } from "@/lib/currency";
+import PromoRibbon from "@/components/PromoRibbon";
 
 interface ImageGalleryProps {
   images: string[];
   alt: string;
   basePrice?: number | null;
+  /** Ribbon text shown over the main image while the product is on promotion. */
+  promoRibbon?: string | null;
   colorImages?: {
     colorId: number;
     name: string;
@@ -17,7 +20,7 @@ interface ImageGalleryProps {
   }[];
 }
 
-export default function ImageGallery({ images, alt, colorImages = [], basePrice = null }: ImageGalleryProps) {
+export default function ImageGallery({ images, alt, colorImages = [], basePrice = null, promoRibbon = null }: ImageGalleryProps) {
   const [selected, setSelected] = useState(0);
   const [lightbox, setLightbox] = useState(false);
 
@@ -102,6 +105,7 @@ export default function ImageGallery({ images, alt, colorImages = [], basePrice 
         className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-100 mb-3 cursor-pointer"
         onClick={() => openLightbox(selected)}
       >
+        {promoRibbon && <PromoRibbon text={promoRibbon} />}
         <Image
           src={images[selected]}
           alt={`${alt} - снимка ${selected + 1}`}

@@ -21,3 +21,16 @@ export function revalidateProductPaths(product?: { id: number } | null) {
     revalidatePath(`/catalog/${product.id}`);
   }
 }
+
+/**
+ * After a promotion is created/edited/deleted, every listing plus the detail
+ * page of each product that was (or now is) attached needs a fresh render.
+ */
+export function revalidatePromotionPaths(productIds: number[]) {
+  revalidatePath("/catalog");
+  revalidatePath("/oils");
+  revalidatePath("/");
+  for (const id of new Set(productIds)) {
+    revalidatePath(`/catalog/${id}`);
+  }
+}

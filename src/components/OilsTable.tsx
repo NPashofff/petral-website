@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatPrice } from "@/lib/currency";
+import { effectivePrice, type ActivePromo } from "@/lib/promotion";
 
 export type OilRow = {
   id: number;
@@ -12,14 +13,21 @@ export type OilRow = {
   viscosity: string | null;
   volumeValue: number | null;
   volumeUnit: string | null;
+  promo?: ActivePromo | null;
 };
+
+/** Net per-unit price after an active promotion (falls back to the list price). */
+function unitPrice(r: OilRow): number | null {
+  return effectivePrice(r.price, r.promo);
+}
 
 type SortKey = "name" | "brand" | "viscosity" | "package" | "price" | "total";
 type SortDir = "asc" | "desc";
 
 function totalPrice(r: OilRow): number | null {
-  if (r.price == null || r.volumeValue == null) return null;
-  return r.price * r.volumeValue;
+  const p = unitPrice(r);
+  if (p == null || r.volumeValue == null) return null;
+  return p * r.volumeValue;
 }
 
 function packageNumeric(r: OilRow): number {
@@ -37,7 +45,7 @@ function compare(a: OilRow, b: OilRow, key: SortKey): number {
     case "package":
       return packageNumeric(a) - packageNumeric(b);
     case "price":
-      return (a.price ?? Infinity) - (b.price ?? Infinity);
+      return (unitPrice(a) ?? Infinity) - (unitPrice(b) ?? Infinity);
     case "total":
       return (totalPrice(a) ?? Infinity) - (totalPrice(b) ?? Infinity);
   }
@@ -102,6 +110,11 @@ export default function OilsTable({ rows }: { rows: OilRow[] }) {
                     <Link href={`/catalog/${r.id}`} className="hover:text-[var(--color-primary)] hover:underline">
                       {r.name}
                     </Link>
+                    {r.promo && (
+                      <span className="ml-2 inline-block bg-red-600 text-white text-[10px] font-bold uppercase px-1.5 py-0.5 rounded align-middle">
+                        {r.promo.ribbonText}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-700">{r.brand}</td>
                   <td className="px-4 py-3">
@@ -117,7 +130,14 @@ export default function OilsTable({ rows }: { rows: OilRow[] }) {
                     {r.volumeValue != null && unit ? `${r.volumeValue} ${unit}` : "—"}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    {r.price != null ? formatPrice(r.price, { unit: unit || null }) : "—"}
+                    {r.promo?.promoPrice != null && r.price != null && (
+                      <span className="block text-xs text-gray-400 line-through">
+                        {formatPrice(r.price, { unit: unit || null })}
+                      </span>
+                    )}
+                    <span className={r.promo?.promoPrice != null ? "text-red-600 font-semibold" : ""}>
+                      {unitPrice(r) != null ? formatPrice(unitPrice(r)!, { unit: unit || null }) : "—"}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">
                     {total != null ? formatPrice(total) : "—"}

@@ -18,6 +18,12 @@ COPY . .
 # Generate Prisma client (no DB connection needed)
 RUN npx prisma generate
 
+# Create an empty schema-only SQLite DB for `next build`: statically prerendered
+# pages (home, /_not-found, catalog) query Prisma at build time and fail with
+# P2021 ("table does not exist") without it. The file never leaves this stage;
+# the runtime DB is created by entrypoint.sh in /app/data.
+RUN npx prisma db push --skip-generate
+
 # Compile seed.ts to seed.js for runtime use
 RUN ./node_modules/.bin/esbuild prisma/seed.ts \
     --bundle --platform=node --format=cjs \

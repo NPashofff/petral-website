@@ -157,8 +157,8 @@ export default function ProductFilter({
         ) : (
           <>
             <div className="flex-1 min-w-[120px]">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Мин. цена
+              <label className="block text-sm font-medium text-gray-700 mb-1" title="По редовната цена без ДДС; промо цените не се филтрират">
+                Мин. цена <span className="font-normal text-gray-400">(редовна)</span>
               </label>
               <input
                 type="number"
@@ -170,8 +170,8 @@ export default function ProductFilter({
             </div>
 
             <div className="flex-1 min-w-[120px]">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Макс. цена
+              <label className="block text-sm font-medium text-gray-700 mb-1" title="По редовната цена без ДДС; промо цените не се филтрират">
+                Макс. цена <span className="font-normal text-gray-400">(редовна)</span>
               </label>
               <input
                 type="number"

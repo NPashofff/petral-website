@@ -12,6 +12,11 @@ import { formatPrice } from "@/lib/currency";
 import { absoluteUrl } from "@/lib/site";
 import { parseImages } from "@/lib/images";
 import { sanitizeProductHtml } from "@/lib/sanitize";
+import { getActivePromo, effectivePrice } from "@/lib/promotion";
+
+// Promotions start/expire by date: re-render the cached detail page at most
+// once an hour so those transitions show up without an admin edit.
+export const revalidate = 3600;
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -79,10 +84,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
         },
         orderBy: [{ color: { order: "asc" } }, { color: { name: "asc" } }],
       },
+      promotion: true,
     },
   });
 
   if (!product || product.hidden) notFound();
+
+  const promo = getActivePromo(product);
+  // Base price used for surcharge maths and the "Основна цена" hints: the
+  // discounted price while a promotion is active, else the list price.
+  const basePrice = effectivePrice(product.price, promo);
 
   const rawImages = parseImages(product.images);
   const images: string[] = rawImages.length > 0
@@ -101,13 +112,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     sku: String(product.id),
     brand: { "@type": "Brand", name: product.brand },
     url: productUrl,
-    ...(product.price != null
+    ...(basePrice != null
       ? {
           offers: {
             "@type": "Offer",
             url: productUrl,
             priceCurrency: "EUR",
-            price: product.price.toFixed(2),
+            price: basePrice.toFixed(2),
             availability: "https://schema.org/InStock",
           },
         }
@@ -137,8 +148,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     delta: colorDeltaById.get(color.id) ?? null,
   }));
   const totalPrice =
-    isOil && product.price != null && product.volumeValue != null
-      ? product.price * product.volumeValue
+    isOil && basePrice != null && product.volumeValue != null
+      ? basePrice * product.volumeValue
       : null;
 
   const specs = isOil
@@ -179,7 +190,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {/* Top section: Gallery + Key info side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Left: Gallery */}
-        <ImageGallery images={images} alt={product.name} colorImages={colorImages} basePrice={product.price} />
+        <ImageGallery
+          images={images}
+          alt={product.name}
+          colorImages={colorImages}
+          basePrice={basePrice}
+          promoRibbon={promo?.ribbonText ?? null}
+        />
 
         {/* Right: Key info */}
         <div>
@@ -189,24 +206,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           <h1 className="text-3xl font-bold text-gray-900 mt-4">{product.name}</h1>
           {isOil ? (
-            <div className="mt-4">
-              <p className="text-3xl font-bold text-[var(--color-primary)]">
-                {product.price != null
-                  ? formatPrice(product.price, { unit: product.volumeUnit ?? null })
-                  : "Цена при запитване"}
-              </p>
-              {product.price != null && (
-                <span className="block text-sm text-gray-600 mt-1">Цените са без ДДС</span>
-              )}
+            <ProductPrice basePrice={product.price} unit={product.volumeUnit ?? null} promo={promo}>
               {totalPrice != null && (
                 <p className="text-sm text-gray-600 mt-1">
                   Обща цена за опаковка ({product.volumeValue}{product.volumeUnit}):{" "}
                   <strong>{formatPrice(totalPrice)}</strong> без ДДС
                 </p>
               )}
-            </div>
+            </ProductPrice>
           ) : (
-            <ProductPrice basePrice={product.price} colorDeltas={colorDeltas} />
+            <ProductPrice basePrice={product.price} colorDeltas={colorDeltas} promo={promo} />
           )}
 
           <p className="text-sm text-gray-600 mt-2">
@@ -255,7 +264,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
       {/* Inquiry form - at the bottom */}
       <div className="mt-12">
-        <InquiryForm productId={product.id} productName={product.name} colors={inquiryColors} basePrice={product.price} />
+        <InquiryForm productId={product.id} productName={product.name} colors={inquiryColors} basePrice={basePrice} />
       </div>
 
       <p className="text-center text-sm text-gray-500 mt-8">Снимките са илюстративни !</p>

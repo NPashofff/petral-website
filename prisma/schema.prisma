@@ -29,6 +29,10 @@ model Product {
   featured    Boolean   @default(false)
   hidden      Boolean   @default(false)
   sortOrder   Int       @default(0)
+  // Promotion feature: a product belongs to at most one promotion (single- or
+  // multi-product). Deleting the promotion detaches the product (SetNull).
+  promotionId Int?
+  promotion   Promotion? @relation(fields: [promotionId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now())
   inquiries   Inquiry[]
   colors      Color[]   @relation("ProductColors")
@@ -42,6 +46,33 @@ model Product {
   @@index([brand, category])
   // #22: covers the catalog filter (category, hidden) + sort (sortOrder desc, createdAt desc).
   @@index([category, hidden, sortOrder, createdAt])
+  @@index([promotionId])
+}
+
+/// A time-boxed promotion applied to one or many products.
+/// - type "PRICE":   `promoPriceGross` is the admin-entered promo price INCLUDING
+///                   VAT (EUR); the site shows it net of VAT like every other price.
+/// - type "PERCENT": `percent` is the discount (0–100) applied to the product's
+///                   base (ex-VAT) price. Colour surcharges are added on top of the
+///                   discounted base price.
+/// - type "OTHER":   no price change (e.g. "на изплащане"): only the ribbon,
+///                   the comment and the validity window apply.
+model Promotion {
+  id              Int       @id @default(autoincrement())
+  title           String
+  type            String    // PRICE | PERCENT | OTHER
+  promoPriceGross Float?
+  percent         Float?
+  ribbonText      String    @default("ПРОМОЦИЯ")
+  comment         String?
+  startsAt        DateTime?
+  endsAt          DateTime?
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+  products        Product[]
+
+  @@index([active, startsAt, endsAt])
 }
 
 model Color {

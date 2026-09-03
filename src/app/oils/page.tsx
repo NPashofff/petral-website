@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import OilsTable, { type OilRow } from "@/components/OilsTable";
+import { getActivePromo } from "@/lib/promotion";
 import ProductFilter from "@/components/ProductFilter";
 import Pagination from "@/components/Pagination";
 import type { Metadata } from "next";
@@ -89,10 +90,14 @@ async function OilsListing({ searchParams }: OilsPageProps) {
       viscosity: true,
       volumeValue: true,
       volumeUnit: true,
+      promotion: true,
     },
   });
 
-  const rows: OilRow[] = products;
+  const rows: OilRow[] = products.map(({ promotion, ...p }) => ({
+    ...p,
+    promo: getActivePromo({ price: p.price, promotion }),
+  }));
   const buildHref = (target: number) =>
     `/oils${buildQueryString({ ...baseQuery, page: target > 1 ? String(target) : undefined })}`;
 

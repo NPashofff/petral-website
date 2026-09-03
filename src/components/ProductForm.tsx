@@ -7,6 +7,8 @@ import Toast from "@/components/Toast";
 import { CATEGORIES, CATEGORY_KEYS } from "@/lib/categories";
 import { parseImages, serializeImages } from "@/lib/images";
 import { formatPrice } from "@/lib/currency";
+import Link from "next/link";
+import { PROMOTION_STATUS_CLASS, PROMOTION_STATUS_LABEL, type PromotionStatus } from "@/lib/promotion";
 
 const RichTextEditor = dynamic(() => import("./RichTextEditor"), { ssr: false });
 
@@ -39,6 +41,8 @@ interface ProductFormData {
 interface ProductFormProps {
   initialData?: ProductFormData;
   productId?: number;
+  /** Promotion the product currently belongs to (edit mode only). */
+  promotion?: { id: number; title: string; status: PromotionStatus } | null;
 }
 
 interface ColorOption {
@@ -74,7 +78,7 @@ const defaultData: ProductFormData = {
   colorPriceMap: {},
 };
 
-export default function ProductForm({ initialData, productId }: ProductFormProps) {
+export default function ProductForm({ initialData, productId, promotion = null }: ProductFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<ProductFormData>(() => ({
     ...defaultData,
@@ -796,6 +800,38 @@ export default function ProductForm({ initialData, productId }: ProductFormProps
             </label>
           </div>
         </div>
+      </section>
+
+      <section className="border-t border-gray-200 pt-6" data-testid="product-promotion-section">
+        <div className="mb-3">
+          <h2 className="text-lg font-semibold text-gray-900">Промоция</h2>
+          <p className="text-sm text-gray-500">
+            Промо цена или процент, червена лента върху първата снимка и текст под цената, с валидност от–до.
+          </p>
+        </div>
+        {!isEdit ? (
+          <p className="text-sm text-gray-500">Първо запазете продукта, после му добавете промоция.</p>
+        ) : promotion ? (
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${PROMOTION_STATUS_CLASS[promotion.status]}`}>
+              {PROMOTION_STATUS_LABEL[promotion.status]}
+            </span>
+            <span className="font-medium text-gray-900">{promotion.title}</span>
+            <Link href={`/admin/promotions/${promotion.id}/edit`} className="text-blue-600 hover:text-blue-800 font-medium">
+              Редактирай промоцията
+            </Link>
+            <Link href={`/admin/promotions/new?products=${productId}`} className="text-gray-600 hover:text-gray-800">
+              Нова промоция за този продукт
+            </Link>
+          </div>
+        ) : (
+          <Link
+            href={`/admin/promotions/new?products=${productId}`}
+            className="inline-block bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            + Добави промоция
+          </Link>
+        )}
       </section>
 
       {error && <p className="text-red-600 text-sm">{error}</p>}

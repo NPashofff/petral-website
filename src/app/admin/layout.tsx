@@ -7,6 +7,7 @@ import { useState } from "react";
 const adminLinks = [
   { href: "/admin", label: "Табло" },
   { href: "/admin/products", label: "Продукти" },
+  { href: "/admin/promotions", label: "Промоции" },
   { href: "/admin/colors", label: "Цветове" },
   { href: "/admin/inquiries", label: "Запитвания" },
   { href: "/admin/contacts", label: "Съобщения" },

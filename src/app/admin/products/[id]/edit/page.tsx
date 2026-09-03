@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import ProductForm from "@/components/ProductForm";
+import { promotionStatus } from "@/lib/promotion";
 
 interface EditProductPageProps {
   params: Promise<{ id: string }>;
@@ -13,6 +14,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     include: {
       colors: { select: { id: true } },
       colorImages: { select: { colorId: true, imageUrl: true, price: true } },
+      promotion: true,
     },
   });
 
@@ -51,7 +53,15 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
   return (
     <>
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Редактирай: {product.name}</h1>
-      <ProductForm initialData={initialData} productId={product.id} />
+      <ProductForm
+        initialData={initialData}
+        productId={product.id}
+        promotion={
+          product.promotion
+            ? { id: product.promotion.id, title: product.promotion.title, status: promotionStatus(product.promotion) }
+            : null
+        }
+      />
     </>
   );
 }

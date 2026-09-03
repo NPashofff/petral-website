@@ -4,6 +4,8 @@ import { categoryBadgeClass, categoryLabel } from "@/lib/categories";
 import { resolveProductImage } from "@/lib/brand-logo";
 import { formatPrice } from "@/lib/currency";
 import { parseImages } from "@/lib/images";
+import { effectivePrice, type ActivePromo } from "@/lib/promotion";
+import PromoRibbon from "@/components/PromoRibbon";
 
 interface ProductCardProps {
   id: number;
@@ -17,6 +19,7 @@ interface ProductCardProps {
   viscosity?: string | null;
   volumeValue?: number | null;
   volumeUnit?: string | null;
+  promo?: ActivePromo | null;
 }
 
 export default function ProductCard({
@@ -30,20 +33,22 @@ export default function ProductCard({
   viscosity,
   volumeValue,
   volumeUnit,
+  promo = null,
 }: ProductCardProps) {
   const imageList = parseImages(images);
   const firstImage = resolveProductImage(imageList, brand, category);
   const isOil = category === "OILS";
 
-  const priceLabel = (() => {
-    if (price == null) return "-";
-    return formatPrice(price, { unit: isOil ? volumeUnit ?? null : null });
-  })();
+  const unit = isOil ? volumeUnit ?? null : null;
+  const shownPrice = effectivePrice(price, promo);
+  const hasPromoPrice = promo?.promoPrice != null;
+  const priceLabel = shownPrice == null ? "-" : formatPrice(shownPrice, { unit });
 
   return (
     <Link href={`/catalog/${id}`} className="group block">
       <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow">
         <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
+          {promo && <PromoRibbon text={promo.ribbonText} size="sm" />}
           <Image
             src={firstImage}
             alt={name}
@@ -70,9 +75,14 @@ export default function ProductCard({
             {name}
           </h3>
           <p className="text-sm text-gray-500 mt-1">{brand}</p>
-          <p className="text-xl font-bold text-[var(--color-primary)] mt-2">
+          {hasPromoPrice && price != null && (
+            <p className="text-sm text-gray-400 line-through mt-2" data-testid="old-price">
+              {formatPrice(price, { unit })}
+            </p>
+          )}
+          <p className={`text-xl font-bold ${hasPromoPrice ? "text-red-600" : "text-[var(--color-primary)]"} ${hasPromoPrice ? "" : "mt-2"}`}>
             {priceLabel}
-            {price != null && (
+            {shownPrice != null && (
               <span className="block text-xs font-normal text-gray-500">без ДДС</span>
             )}
           </p>

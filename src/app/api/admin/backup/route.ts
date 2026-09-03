@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
   if (scopes.has("db")) {
     // #20: the admins table (and its password hashes) is intentionally NOT
     // exported. See the sensitivity note at the top of this file.
-    const [products, colors, colorImages, siteContent, contacts] =
+    const [products, colors, colorImages, siteContent, contacts, promotions] =
       await Promise.all([
         prisma.product.findMany({
           include: { colors: { select: { id: true } } },
@@ -75,6 +75,7 @@ export async function GET(req: NextRequest) {
         prisma.productColorImage.findMany({ orderBy: { id: "asc" } }),
         prisma.siteContent.findMany({ orderBy: { key: "asc" } }),
         prisma.contact.findMany({ orderBy: { id: "asc" } }),
+        prisma.promotion.findMany({ orderBy: { id: "asc" } }),
       ]);
 
     const productsSerializable = products.map((p) => ({
@@ -88,6 +89,8 @@ export async function GET(req: NextRequest) {
     zip.file("data/color_images.json", JSON.stringify(colorImages, null, 2));
     zip.file("data/site_content.json", JSON.stringify(siteContent, null, 2));
     zip.file("data/contacts.json", JSON.stringify(contacts, null, 2));
+    // Promotions are referenced by Product.promotionId (exported with each product).
+    zip.file("data/promotions.json", JSON.stringify(promotions, null, 2));
   }
 
   if (scopes.has("inquiries")) {

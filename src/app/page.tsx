@@ -3,10 +3,14 @@ import Hero from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
 import { prisma } from "@/lib/db";
 import { getContentMap } from "@/lib/content";
+import { getActivePromo } from "@/lib/promotion";
 
-// #28: statically rendered. Content comes from the 'site-content' cache tag;
-// the featured-products list is refreshed because every admin product mutation
-// calls revalidatePath('/') (see src/lib/revalidate.ts). No force-dynamic.
+// Rendered per request: the Docker build runs `next build` against an EMPTY
+// schema-only SQLite DB (see Dockerfile), so a statically prerendered home page
+// would ship with no featured products and default texts. Site content still
+// comes from the 'site-content' data cache tag; promotions start/expire by
+// date and are evaluated live here.
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [featuredProducts, content] = await Promise.all([
@@ -14,6 +18,7 @@ export default async function HomePage() {
       where: { featured: true, hidden: false },
       take: 6,
       orderBy: { createdAt: "desc" },
+      include: { promotion: true },
     }),
     getContentMap([
       "feature1_title", "feature1_text",
@@ -102,7 +107,7 @@ export default async function HomePage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredProducts.map((product) => (
-                <ProductCard key={product.id} {...product} />
+                <ProductCard key={product.id} {...product} promo={getActivePromo(product)} />
               ))}
             </div>
             <div className="text-center mt-10">
